@@ -88,119 +88,85 @@ export default function LiveMatches() {
     );
   }
 
-  if (!liveMatches || liveMatches.length === 0) {
+  // Make sure we have an array of live matches
+  const matchesArray = Array.isArray(liveMatches) ? liveMatches : [];
+  
+  if (matchesArray.length === 0) {
     return null;
   }
 
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-2xl shadow-lg p-5 mb-6 relative overflow-hidden">
-      {/* Background patterns */}
-      <div className="absolute top-0 right-0 h-full w-full opacity-10">
-        <svg width="100%" height="100%" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="100" r="80" fill="white" />
-          <circle cx="300" cy="300" r="120" fill="white" />
-        </svg>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 relative z-10">
-        <div className="flex items-center mb-3 sm:mb-0">
-          <div className="flex-shrink-0 bg-white/30 rounded-full p-2.5 mr-4 backdrop-blur-sm">
-            <Clock className="h-7 w-7" />
-          </div>
-          <div>
-            <h3 className="font-bold text-xl tracking-tight">Live Matches Right Now</h3>
-            <p className="text-white/90 mt-1">Watch your favorite teams compete in real-time</p>
-          </div>
+    <div className="bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-xl shadow-md mb-5 relative overflow-hidden">
+      {/* Top section with title and link */}
+      <div className="flex items-center justify-between p-3 relative z-10">
+        <div className="flex items-center">
+          <Clock className="h-5 w-5 mr-2" />
+          <h3 className="font-bold text-base">Live Matches Right Now</h3>
         </div>
         <Link
           href="/leagues"
-          className="px-5 py-2 bg-white text-blue-600 hover:text-blue-700 rounded-full font-semibold hover:bg-white/90 transition-colors shadow-sm inline-flex items-center group"
+          className="text-xs font-medium text-white/90 hover:text-white flex items-center"
         >
           View All Matches
-          <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+          <ChevronRight className="ml-0.5 h-3 w-3" />
         </Link>
       </div>
       
-      <div className="relative z-10">
-        {/* Scroll buttons */}
-        {scrollPosition > 0 && (
-          <button 
-            onClick={() => scroll('left')} 
-            className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-100 text-blue-600 rounded-full p-2 shadow-md"
-            aria-label="Scroll left"
+      {/* Matches cards */}
+      <div className="px-3 pb-3 flex space-x-3 overflow-x-auto scrollbar-hide"
+        ref={scrollContainerRef}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {matchesArray.slice(0, 2).map((match: any) => (
+          <div 
+            key={match.id} 
+            className="bg-white/15 backdrop-blur-sm rounded-lg p-3 flex-1 min-w-[160px] flex flex-col"
           >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-        )}
-        
-        {scrollContainerRef.current && 
-          scrollPosition < scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth && (
-          <button 
-            onClick={() => scroll('right')} 
-            className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-100 text-blue-600 rounded-full p-2 shadow-md"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        )}
-        
-        {/* Matches scroll container */}
-        <div 
-          ref={scrollContainerRef}
-          className="overflow-x-auto pb-2 flex space-x-4 scrollbar-hide"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {liveMatches.map((match: any) => (
-            <div 
-              key={match.id} 
-              className="bg-white/15 backdrop-blur-sm rounded-xl p-4 min-w-[280px] border border-white/20 hover:bg-white/20 transition-colors flex flex-col"
-            >
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold bg-red-500 text-white px-2.5 py-1 rounded-full tracking-wide">LIVE</span>
-                <span className="text-xs font-medium text-white/90 bg-white/10 px-2.5 py-1 rounded-full">
-                  {match.leagueId === 1 ? 'NBA Finals' : match.leagueId === 3 ? 'Premier League' : 'UFC'}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between bg-black/10 rounded-lg p-3 mb-3">
-                <div className="flex flex-col items-center w-[38%]">
-                  <img 
-                    src={match.team1Logo || 'https://via.placeholder.com/40'} 
-                    alt={match.team1}
-                    className="w-12 h-12 rounded-full object-cover bg-white/20 p-1 mb-2"
-                  />
-                  <span className="font-bold text-center">{match.team1}</span>
-                </div>
-                
-                <div className="text-center w-[24%]">
-                  <div className="font-bold text-2xl mb-1">
-                    {typeof match.score1 === 'number' && typeof match.score2 === 'number' 
-                      ? `${match.score1} - ${match.score2}` 
-                      : 'vs'
-                    }
-                  </div>
-                  <div className="text-xs text-white/80 bg-black/20 rounded-full px-2 py-0.5 inline-block">
-                    {match.leagueId === 1 ? 'Q3 5:42' : match.leagueId === 3 ? '65\'' : 'Round 2'}
-                  </div>
-                </div>
-                
-                <div className="flex flex-col items-center w-[38%]">
-                  <img 
-                    src={match.team2Logo || 'https://via.placeholder.com/40'} 
-                    alt={match.team2}
-                    className="w-12 h-12 rounded-full object-cover bg-white/20 p-1 mb-2"
-                  />
-                  <span className="font-bold text-center">{match.team2}</span>
-                </div>
-              </div>
-              
-              <button className="w-full py-2.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors mt-auto flex items-center justify-center group">
-                Watch Now
-                <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
-              </button>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full">LIVE</span>
+              <span className="text-[10px] font-medium bg-white/10 px-2 py-0.5 rounded-full">
+                {match.leagueId === 1 ? 'NBA' : match.leagueId === 3 ? 'Premier League' : 'UFC'}
+              </span>
             </div>
-          ))}
-        </div>
+            
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col items-center w-[40%]">
+                <img 
+                  src={match.team1Logo || 'https://via.placeholder.com/32'} 
+                  alt={match.team1}
+                  className="w-8 h-8 rounded-full object-cover mb-1"
+                />
+                <span className="text-xs font-medium text-center">{match.team1}</span>
+              </div>
+              
+              <div className="text-center">
+                <div className="font-bold text-xl">
+                  {typeof match.score1 === 'number' && typeof match.score2 === 'number' 
+                    ? `${match.score1} - ${match.score2}` 
+                    : 'vs'
+                  }
+                </div>
+                <div className="text-[10px] bg-black/20 rounded-full px-1.5 py-0.5 inline-block">
+                  {match.leagueId === 1 ? 'Round 2' : 'Round 2'}
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-center w-[40%]">
+                <img 
+                  src={match.team2Logo || 'https://via.placeholder.com/32'} 
+                  alt={match.team2}
+                  className="w-8 h-8 rounded-full object-cover mb-1"
+                />
+                <span className="text-xs font-medium text-center">{match.team2}</span>
+              </div>
+            </div>
+            
+            <button className="w-full py-1.5 mt-auto bg-white/20 hover:bg-white/30 rounded text-xs font-medium transition-colors flex items-center justify-center">
+              Watch Now
+              <ChevronRight className="ml-0.5 h-3 w-3" />
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
