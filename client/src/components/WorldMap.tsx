@@ -87,6 +87,30 @@ export default function WorldMap({ leagues, selectedSport, onSelectLeague }: Wor
     ]
   };
 
+  // Map fake league locations to actual league IDs in our database
+  const leagueNameToIdMap: Record<string, number> = {
+    // Basketball leagues
+    'NBA': 1,
+    'EuroLeague': 2,
+    'CBA': 3,
+    'NBL': 4,
+    'Liga ACB': 5,
+    // Football leagues
+    'Premier League': 1,
+    'La Liga': 2,
+    'Bundesliga': 3,
+    'Serie A': 4,
+    'Ligue 1': 5,
+    // Baseball leagues
+    'MLB': 1,
+    'NPB': 2,
+    'KBO': 3,
+    // Hockey leagues
+    'NHL': 1,
+    'KHL': 2,
+    'SHL': 3
+  };
+
   // Assign mock locations to leagues based on sport
   const getLeaguesWithLocations = () => {
     // If we don't have a selected sport, don't show any markers
@@ -96,7 +120,7 @@ export default function WorldMap({ leagues, selectedSport, onSelectLeague }: Wor
 
     // Map the locations to markers
     return sportLocations[selectedSport as keyof typeof sportLocations].map((location, index) => ({
-      id: index + 1, // Create a mock ID
+      id: leagueNameToIdMap[location.name] || index + 1, // Use real IDs from our database
       name: location.name,
       sport: selectedSport,
       logo: `https://via.placeholder.com/100?text=${location.name}`,
