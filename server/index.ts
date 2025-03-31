@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { checkDatabaseConnection } from "./db/index";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Check database connection
+  try {
+    const dbConnected = await checkDatabaseConnection();
+    if (dbConnected) {
+      log('Successfully connected to the PostgreSQL database');
+    } else {
+      log('WARNING: Failed to connect to the PostgreSQL database');
+    }
+  } catch (error) {
+    log(`Database connection error: ${error}`);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

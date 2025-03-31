@@ -27,6 +27,8 @@ import {
   type Comment,
   type InsertComment,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, ne, like, and, or, asc, desc, count, inArray, notInArray } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -618,4 +620,361 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    const lowercaseQuery = query.toLowerCase();
+    const results = await db.select().from(users).where(
+      or(
+        like(users.fullName, `%${lowercaseQuery}%`),
+        like(users.username, `%${lowercaseQuery}%`),
+        like(users.team, `%${lowercaseQuery}%`),
+        like(users.sport, `%${lowercaseQuery}%`)
+      )
+    );
+    return results;
+  }
+
+  // Post methods
+  async getPost(id: number): Promise<Post | undefined> {
+    const [post] = await db.select().from(posts).where(eq(posts.id, id));
+    return post;
+  }
+
+  async createPost(post: InsertPost): Promise<Post> {
+    const [newPost] = await db.insert(posts).values(post).returning();
+    return newPost;
+  }
+
+  async getUserPosts(userId: number): Promise<Post[]> {
+    return db.select()
+      .from(posts)
+      .where(eq(posts.userId, userId))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async getFeedPosts(userId: number): Promise<Post[]> {
+    // Get IDs of users who are connected to the current user
+    const connectedUsers = await db.select({ followingId: connections.followingId })
+      .from(connections)
+      .where(
+        and(
+          eq(connections.followerId, userId),
+          eq(connections.status, "accepted")
+        )
+      );
+    
+    // Extract just the IDs into an array
+    const followingIds = connectedUsers.map(c => c.followingId);
+    
+    // Include the current user's posts
+    followingIds.push(userId);
+    
+    // Get posts from connected users and the current user
+    return db.select()
+      .from(posts)
+      .where(inArray(posts.userId, followingIds))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  // Connection methods
+  async getConnection(id: number): Promise<Connection | undefined> {
+    const [connection] = await db.select().from(connections).where(eq(connections.id, id));
+    return connection;
+  }
+
+  async createConnection(connection: InsertConnection): Promise<Connection> {
+    const [newConnection] = await db.insert(connections).values(connection).returning();
+    return newConnection;
+  }
+
+  async updateConnectionStatus(id: number, status: string): Promise<Connection | undefined> {
+    const [updatedConnection] = await db
+      .update(connections)
+      .set({ status })
+      .where(eq(connections.id, id))
+      .returning();
+    return updatedConnection;
+  }
+
+  async getUserConnections(userId: number): Promise<Connection[]> {
+    return db.select()
+      .from(connections)
+      .where(
+        and(
+          or(
+            eq(connections.followerId, userId),
+            eq(connections.followingId, userId)
+          ),
+          eq(connections.status, "accepted")
+        )
+      );
+  }
+
+  async getPendingConnections(userId: number): Promise<Connection[]> {
+    return db.select()
+      .from(connections)
+      .where(
+        and(
+          eq(connections.followingId, userId),
+          eq(connections.status, "pending")
+        )
+      );
+  }
+
+  async getSuggestedConnections(userId: number): Promise<User[]> {
+    // Get all users that the current user is already connected with
+    const userConnections = await db.select()
+      .from(connections)
+      .where(
+        or(
+          eq(connections.followerId, userId),
+          eq(connections.followingId, userId)
+        )
+      );
+    
+    // Extract unique user IDs from connections
+    const connectedUserIds = new Set<number>();
+    userConnections.forEach(conn => {
+      connectedUserIds.add(conn.followerId);
+      connectedUserIds.add(conn.followingId);
+    });
+    
+    // Remove current user from the set
+    connectedUserIds.delete(userId);
+    
+    // Get all users that are not in the connectedUserIds set
+    if (connectedUserIds.size === 0) {
+      // If the user has no connections, return all other users
+      return db.select()
+        .from(users)
+        .where(ne(users.id, userId))
+        .limit(10);
+    } else {
+      // Otherwise, return users not in connections
+      return db.select()
+        .from(users)
+        .where(
+          and(
+            ne(users.id, userId),
+            notInArray(users.id, Array.from(connectedUserIds))
+          )
+        )
+        .limit(10);
+    }
+  }
+
+  // League methods
+  async getLeague(id: number): Promise<League | undefined> {
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, id));
+    return league;
+  }
+
+  async createLeague(league: InsertLeague): Promise<League> {
+    const [newLeague] = await db.insert(leagues).values(league).returning();
+    return newLeague;
+  }
+
+  async getAllLeagues(): Promise<League[]> {
+    return db.select().from(leagues);
+  }
+
+  async getUserSubscribedLeagues(userId: number): Promise<League[]> {
+    const userSubscriptions = await db.select({ leagueId: subscriptions.leagueId })
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId));
+    
+    const leagueIds = userSubscriptions.map(s => s.leagueId);
+    
+    if (leagueIds.length === 0) {
+      return [];
+    }
+    
+    return db.select()
+      .from(leagues)
+      .where(inArray(leagues.id, leagueIds));
+  }
+
+  // Match methods
+  async getMatch(id: number): Promise<Match | undefined> {
+    const [match] = await db.select().from(matches).where(eq(matches.id, id));
+    return match;
+  }
+
+  async createMatch(match: InsertMatch): Promise<Match> {
+    const [newMatch] = await db.insert(matches).values(match).returning();
+    return newMatch;
+  }
+
+  async getUpcomingMatches(): Promise<Match[]> {
+    return db.select()
+      .from(matches)
+      .where(eq(matches.status, "upcoming"))
+      .orderBy(asc(matches.startTime));
+  }
+
+  async getLiveMatches(): Promise<Match[]> {
+    return db.select()
+      .from(matches)
+      .where(eq(matches.status, "live"))
+      .orderBy(asc(matches.startTime));
+  }
+
+  async getLeagueMatches(leagueId: number): Promise<Match[]> {
+    return db.select()
+      .from(matches)
+      .where(eq(matches.leagueId, leagueId))
+      .orderBy(asc(matches.startTime));
+  }
+
+  // Message methods
+  async getMessage(id: number): Promise<Message | undefined> {
+    const [message] = await db.select().from(messages).where(eq(messages.id, id));
+    return message;
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db.insert(messages).values(message).returning();
+    return newMessage;
+  }
+
+  async getUserMessages(userId: number): Promise<Message[]> {
+    return db.select()
+      .from(messages)
+      .where(
+        or(
+          eq(messages.senderId, userId),
+          eq(messages.receiverId, userId)
+        )
+      )
+      .orderBy(desc(messages.createdAt));
+  }
+
+  async getConversation(userId1: number, userId2: number): Promise<Message[]> {
+    return db.select()
+      .from(messages)
+      .where(
+        or(
+          and(
+            eq(messages.senderId, userId1),
+            eq(messages.receiverId, userId2)
+          ),
+          and(
+            eq(messages.senderId, userId2),
+            eq(messages.receiverId, userId1)
+          )
+        )
+      )
+      .orderBy(asc(messages.createdAt));
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.receiverId, userId),
+          eq(messages.read, false)
+        )
+      );
+    
+    return result[0]?.count || 0;
+  }
+
+  // Subscription methods
+  async getSubscription(id: number): Promise<Subscription | undefined> {
+    const [subscription] = await db.select().from(subscriptions).where(eq(subscriptions.id, id));
+    return subscription;
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const [newSubscription] = await db.insert(subscriptions).values(subscription).returning();
+    return newSubscription;
+  }
+
+  async getUserSubscriptions(userId: number): Promise<Subscription[]> {
+    return db.select()
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId));
+  }
+
+  // Like methods
+  async getLike(id: number): Promise<Like | undefined> {
+    const [like] = await db.select().from(likes).where(eq(likes.id, id));
+    return like;
+  }
+
+  async createLike(like: InsertLike): Promise<Like> {
+    const [newLike] = await db.insert(likes).values(like).returning();
+    return newLike;
+  }
+
+  async deleteLike(id: number): Promise<boolean> {
+    const result = await db.delete(likes).where(eq(likes.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getPostLikes(postId: number): Promise<Like[]> {
+    return db.select()
+      .from(likes)
+      .where(eq(likes.postId, postId));
+  }
+
+  async isPostLikedByUser(postId: number, userId: number): Promise<boolean> {
+    const result = await db.select()
+      .from(likes)
+      .where(
+        and(
+          eq(likes.postId, postId),
+          eq(likes.userId, userId)
+        )
+      );
+    
+    return result.length > 0;
+  }
+
+  // Comment methods
+  async getComment(id: number): Promise<Comment | undefined> {
+    const [comment] = await db.select().from(comments).where(eq(comments.id, id));
+    return comment;
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const [newComment] = await db.insert(comments).values(comment).returning();
+    return newComment;
+  }
+
+  async getPostComments(postId: number): Promise<Comment[]> {
+    return db.select()
+      .from(comments)
+      .where(eq(comments.postId, postId))
+      .orderBy(asc(comments.createdAt));
+  }
+}
+
+// Switch from in-memory storage to database storage
+export const storage = new DatabaseStorage();
