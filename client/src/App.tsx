@@ -27,12 +27,14 @@ export const AuthContext = createContext<{
   loading: boolean;
   setUser: (user: any) => void;
   logout: () => void;
+  refetchUser: () => Promise<any>;
 }>({
   isAuthenticated: false,
   user: null,
   loading: true,
   setUser: () => {},
   logout: () => {},
+  refetchUser: async () => null,
 });
 
 // Private route component that redirects to login if not authenticated
@@ -104,7 +106,7 @@ function Router() {
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       try {
@@ -136,6 +138,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
   
+  const refetchUser = async () => {
+    const result = await refetch();
+    if (result.data) {
+      setUser(result.data);
+    }
+    return result.data;
+  };
+  
   return (
     <AuthContext.Provider 
       value={{ 
@@ -143,7 +153,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         user, 
         loading: isLoading,
         setUser,
-        logout
+        logout,
+        refetchUser
       }}
     >
       {children}

@@ -147,6 +147,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // User profile update route
+  app.put("/api/user/profile", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId!;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Validate profile update data
+      const profileUpdateSchema = z.object({
+        fullName: z.string().optional(),
+        avatar: z.string().nullable().optional(),
+        sport: z.string().nullable().optional(),
+        position: z.string().nullable().optional(),
+        team: z.string().nullable().optional(),
+        bio: z.string().nullable().optional()
+      });
+      
+      const profileData = profileUpdateSchema.parse(req.body);
+      
+      // Update user profile
+      const updatedUser = await storage.updateUser(userId, profileData);
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update profile" });
+      }
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json({ 
+        message: "Profile updated successfully",
+        user: userWithoutPassword 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+  
   // User routes
   app.get("/api/users/:id", async (req, res) => {
     const userId = parseInt(req.params.id);

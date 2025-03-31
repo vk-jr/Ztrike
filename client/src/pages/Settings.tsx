@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link, useLocation, Route, Switch } from "wouter";
 import { 
   Settings as SettingsIcon, 
@@ -10,15 +10,23 @@ import {
   Lock,
   ChevronRight,
   Sun,
-  Moon
+  Moon,
+  Upload,
+  Save
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { applyTheme, getCurrentTheme } from "@/lib/themeService";
+import { toast } from "@/hooks/use-toast";
+import { AuthContext } from "@/App";
 
 export default function Settings() {
   const [location, setLocation] = useLocation();
@@ -113,6 +121,9 @@ export default function Settings() {
             <Route path="/settings/appearance">
               <AppearanceSettings currentTheme={currentTheme} onThemeChange={handleThemeChange} />
             </Route>
+            <Route path="/settings/profile">
+              <ProfileSettings />
+            </Route>
             <Route path="/settings">
               <GeneralSettings />
             </Route>
@@ -188,6 +199,208 @@ function GeneralSettings() {
           </div>
         </div>
       </div>
+    </>
+  );
+}
+
+function ProfileSettings() {
+  const { user, loading, refetchUser } = useContext(AuthContext);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    avatar: "",
+    sport: "",
+    position: "",
+    team: "",
+    bio: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || "",
+        avatar: user.avatar || "",
+        sport: user.sport || "",
+        position: user.position || "",
+        team: user.team || "",
+        bio: user.bio || ""
+      });
+    }
+  }, [user]);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        await refetchUser();
+        toast({
+          title: "Profile Updated",
+          description: "Your profile information has been updated successfully.",
+          variant: "default"
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "An error occurred while updating your profile.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[300px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
+  return (
+    <>
+      <h2 className="text-xl font-semibold mb-4">Profile Settings</h2>
+      <p className="text-gray-500 mb-6">Update your profile information</p>
+      
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1">
+            <div className="flex flex-col items-center">
+              <Avatar className="h-32 w-32 mb-4">
+                <AvatarImage src={formData.avatar || ""} alt={formData.fullName} />
+                <AvatarFallback className="bg-blue-500 text-white text-2xl">
+                  {formData.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="w-full">
+                <Label htmlFor="avatar" className="block mb-2 text-sm font-medium">Profile Picture URL</Label>
+                <Input
+                  id="avatar"
+                  name="avatar"
+                  placeholder="https://example.com/avatar.jpg"
+                  value={formData.avatar}
+                  onChange={handleChange}
+                  className="input-blue"
+                />
+                <p className="text-xs text-gray-500 mt-1">Enter a URL for your profile picture</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="md:col-span-2 space-y-6">
+            <div>
+              <Label htmlFor="fullName" className="block mb-2 text-sm font-medium">Full Name</Label>
+              <Input
+                id="fullName"
+                name="fullName"
+                placeholder="John Doe"
+                value={formData.fullName}
+                onChange={handleChange}
+                className="input-blue"
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sport" className="block mb-2 text-sm font-medium">Primary Sport</Label>
+                <Select name="sport" value={formData.sport} onValueChange={(value) => setFormData(prev => ({ ...prev, sport: value }))}>
+                  <SelectTrigger className="input-blue">
+                    <SelectValue placeholder="Select a sport" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basketball">Basketball</SelectItem>
+                    <SelectItem value="football">Football</SelectItem>
+                    <SelectItem value="soccer">Soccer</SelectItem>
+                    <SelectItem value="baseball">Baseball</SelectItem>
+                    <SelectItem value="hockey">Hockey</SelectItem>
+                    <SelectItem value="tennis">Tennis</SelectItem>
+                    <SelectItem value="volleyball">Volleyball</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="position" className="block mb-2 text-sm font-medium">Position</Label>
+                <Input
+                  id="position"
+                  name="position"
+                  placeholder="e.g. Forward, Goalie, etc."
+                  value={formData.position}
+                  onChange={handleChange}
+                  className="input-blue"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="team" className="block mb-2 text-sm font-medium">Current Team</Label>
+              <Input
+                id="team"
+                name="team"
+                placeholder="Team name"
+                value={formData.team}
+                onChange={handleChange}
+                className="input-blue"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="bio" className="block mb-2 text-sm font-medium">Bio</Label>
+              <Textarea
+                id="bio"
+                name="bio"
+                placeholder="Tell us about yourself..."
+                value={formData.bio}
+                onChange={handleChange}
+                className="input-blue min-h-[100px]"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-end">
+          <Button 
+            type="submit" 
+            className="btn-blue" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="mr-2 animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
     </>
   );
 }

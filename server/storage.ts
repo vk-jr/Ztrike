@@ -36,6 +36,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(userId: number, userData: Partial<Omit<User, 'id' | 'password' | 'createdAt'>>): Promise<User | undefined>;
   updateUserLastLogin(userId: number): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   searchUsers(query: string): Promise<User[]>;
@@ -378,6 +379,15 @@ export class MemStorage implements IStorage {
     return newUser;
   }
   
+  async updateUser(userId: number, userData: Partial<Omit<User, 'id' | 'password' | 'createdAt'>>): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser: User = { ...user, ...userData };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
   async updateUserLastLogin(userId: number): Promise<User | undefined> {
     const user = this.users.get(userId);
     if (!user) return undefined;
@@ -665,6 +675,15 @@ export class DatabaseStorage implements IStorage {
     
     const [newUser] = await db.insert(users).values(userWithDefaults).returning();
     return newUser;
+  }
+  
+  async updateUser(userId: number, userData: Partial<Omit<User, 'id' | 'password' | 'createdAt'>>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
   }
   
   async updateUserLastLogin(userId: number): Promise<User | undefined> {
