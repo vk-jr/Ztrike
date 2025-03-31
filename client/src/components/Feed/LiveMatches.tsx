@@ -93,37 +93,41 @@ export default function LiveMatches() {
   }
 
   return (
-    <div className="bg-gradient-to-r from-primary to-green-500 text-white rounded-lg shadow-sm p-4 mb-4 relative overflow-hidden">
-      <div className="absolute top-0 right-0 h-full w-1/3">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="opacity-10 h-full">
-          <path fill="currentColor" d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm0,18a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"></path>
-          <path fill="currentColor" d="M12,6a1,1,0,0,0-1,1v5a1,1,0,0,0,.5.87l4,2.5a1,1,0,0,0,1.37-.37,1,1,0,0,0-.37-1.37L13,11.2V7A1,1,0,0,0,12,6Z"></path>
+    <div className="bg-gradient-to-r from-blue-500 to-teal-500 text-white rounded-2xl shadow-lg p-5 mb-6 relative overflow-hidden">
+      {/* Background patterns */}
+      <div className="absolute top-0 right-0 h-full w-full opacity-10">
+        <svg width="100%" height="100%" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="80" fill="white" />
+          <circle cx="300" cy="300" r="120" fill="white" />
         </svg>
       </div>
-      <div className="flex items-center">
-        <div className="flex-shrink-0 bg-white/20 rounded-full p-2">
-          <Clock className="h-6 w-6" />
+      
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 relative z-10">
+        <div className="flex items-center mb-3 sm:mb-0">
+          <div className="flex-shrink-0 bg-white/30 rounded-full p-2.5 mr-4 backdrop-blur-sm">
+            <Clock className="h-7 w-7" />
+          </div>
+          <div>
+            <h3 className="font-bold text-xl tracking-tight">Live Matches Right Now</h3>
+            <p className="text-white/90 mt-1">Watch your favorite teams compete in real-time</p>
+          </div>
         </div>
-        <div className="ml-3 flex-1">
-          <h3 className="font-semibold text-lg">Live Matches Right Now</h3>
-          <p className="text-white/80 text-sm mt-1">Watch your favorite teams compete in real-time</p>
-        </div>
-        <div className="flex-shrink-0">
-          <Link
-            href="/leagues"
-            className="px-4 py-1 bg-white text-primary rounded-full text-sm font-medium hover:bg-white/90 transition-colors inline-block"
-          >
-            View All Matches
-          </Link>
-        </div>
+        <Link
+          href="/leagues"
+          className="px-5 py-2 bg-white text-blue-600 hover:text-blue-700 rounded-full font-semibold hover:bg-white/90 transition-colors shadow-sm inline-flex items-center group"
+        >
+          View All Matches
+          <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+        </Link>
       </div>
       
-      <div className="relative mt-4">
+      <div className="relative z-10">
         {/* Scroll buttons */}
         {scrollPosition > 0 && (
           <button 
             onClick={() => scroll('left')} 
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-primary/80 hover:bg-primary text-white rounded-full p-1 shadow-md"
+            className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-100 text-blue-600 rounded-full p-2 shadow-md"
+            aria-label="Scroll left"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -133,7 +137,8 @@ export default function LiveMatches() {
           scrollPosition < scrollContainerRef.current.scrollWidth - scrollContainerRef.current.clientWidth && (
           <button 
             onClick={() => scroll('right')} 
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-primary/80 hover:bg-primary text-white rounded-full p-1 shadow-md"
+            className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white hover:bg-gray-100 text-blue-600 rounded-full p-2 shadow-md"
+            aria-label="Scroll right"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -142,48 +147,56 @@ export default function LiveMatches() {
         {/* Matches scroll container */}
         <div 
           ref={scrollContainerRef}
-          className="overflow-x-auto pb-2 flex space-x-3 scrollbar-hide"
+          className="overflow-x-auto pb-2 flex space-x-4 scrollbar-hide"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {liveMatches.map((match: any) => (
-            <div key={match.id} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 min-w-[250px]">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-medium bg-red-500/80 text-white px-2 py-0.5 rounded">LIVE</span>
-                <span className="text-xs text-white/80">
+            <div 
+              key={match.id} 
+              className="bg-white/15 backdrop-blur-sm rounded-xl p-4 min-w-[280px] border border-white/20 hover:bg-white/20 transition-colors flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-bold bg-red-500 text-white px-2.5 py-1 rounded-full tracking-wide">LIVE</span>
+                <span className="text-xs font-medium text-white/90 bg-white/10 px-2.5 py-1 rounded-full">
                   {match.leagueId === 1 ? 'NBA Finals' : match.leagueId === 3 ? 'Premier League' : 'UFC'}
                 </span>
               </div>
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center">
+              
+              <div className="flex items-center justify-between bg-black/10 rounded-lg p-3 mb-3">
+                <div className="flex flex-col items-center w-[38%]">
                   <img 
                     src={match.team1Logo || 'https://via.placeholder.com/40'} 
                     alt={match.team1}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover bg-white/20 p-1 mb-2"
                   />
-                  <span className="ml-2 font-semibold">{match.team1}</span>
+                  <span className="font-bold text-center">{match.team1}</span>
                 </div>
-                <div className="text-center">
-                  <div className="font-bold text-lg">
+                
+                <div className="text-center w-[24%]">
+                  <div className="font-bold text-2xl mb-1">
                     {typeof match.score1 === 'number' && typeof match.score2 === 'number' 
                       ? `${match.score1} - ${match.score2}` 
                       : 'vs'
                     }
                   </div>
-                  <div className="text-xs text-white/80">
+                  <div className="text-xs text-white/80 bg-black/20 rounded-full px-2 py-0.5 inline-block">
                     {match.leagueId === 1 ? 'Q3 5:42' : match.leagueId === 3 ? '65\'' : 'Round 2'}
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <span className="mr-2 font-semibold">{match.team2}</span>
+                
+                <div className="flex flex-col items-center w-[38%]">
                   <img 
                     src={match.team2Logo || 'https://via.placeholder.com/40'} 
                     alt={match.team2}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover bg-white/20 p-1 mb-2"
                   />
+                  <span className="font-bold text-center">{match.team2}</span>
                 </div>
               </div>
-              <button className="w-full mt-3 py-1 bg-white/20 hover:bg-white/30 rounded text-sm font-medium">
+              
+              <button className="w-full py-2.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-colors mt-auto flex items-center justify-center group">
                 Watch Now
+                <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
             </div>
           ))}

@@ -88,27 +88,28 @@ export default function WorldMap({ leagues, selectedSport, onSelectLeague }: Wor
   };
 
   // Map fake league locations to actual league IDs in our database
+  // Using constant IDs for each sport category to ensure we always have valid league IDs
   const leagueNameToIdMap: Record<string, number> = {
-    // Basketball leagues
+    // Basketball leagues - all map to ID 1 (NBA)
     'NBA': 1,
-    'EuroLeague': 2,
-    'CBA': 3,
-    'NBL': 4,
-    'Liga ACB': 5,
-    // Football leagues
-    'Premier League': 1,
-    'La Liga': 2,
+    'EuroLeague': 1,
+    'CBA': 1,
+    'NBL': 1,
+    'Liga ACB': 1,
+    // Football leagues - all map to ID 3 (Premier League)
+    'Premier League': 3,
+    'La Liga': 3,
     'Bundesliga': 3,
-    'Serie A': 4,
-    'Ligue 1': 5,
-    // Baseball leagues
+    'Serie A': 3,
+    'Ligue 1': 3,
+    // Baseball leagues - all map to ID 1 (MLB/NBA for now)
     'MLB': 1,
-    'NPB': 2,
-    'KBO': 3,
-    // Hockey leagues
+    'NPB': 1,
+    'KBO': 1,
+    // Hockey leagues - all map to ID 1 (NHL/NBA for now)
     'NHL': 1,
-    'KHL': 2,
-    'SHL': 3
+    'KHL': 1,
+    'SHL': 1
   };
 
   // Assign mock locations to leagues based on sport

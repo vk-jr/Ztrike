@@ -44,7 +44,7 @@ export default function Leagues() {
 
   // League-specific matches query
   const { data: leagueMatches, isLoading: isLoadingLeagueMatches } = useQuery({
-    queryKey: activeLeagueId ? [`/api/leagues/${activeLeagueId}/matches`] : null,
+    queryKey: activeLeagueId ? [`/api/leagues/${activeLeagueId}/matches`] : ['no-league-matches'],
     enabled: !!activeLeagueId,
   });
 

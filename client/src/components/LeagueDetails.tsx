@@ -130,12 +130,19 @@ export default function LeagueDetails({ leagueId, userId }: LeagueDetailsProps) 
   if (!league) {
     return (
       <Card>
-        <CardContent className="p-8 text-center">
-          <Trophy className="h-12 w-12 mx-auto text-neutral-300" />
-          <h3 className="mt-4 font-medium">League not found</h3>
-          <p className="text-neutral-400 text-sm mt-1">
-            The league you're looking for doesn't exist or has been removed
+        <CardContent className="py-12 px-6 text-center">
+          <Trophy className="h-16 w-16 mx-auto text-neutral-300 mb-4" />
+          <h2 className="text-2xl font-bold mb-2">League Not Found</h2>
+          <p className="text-neutral-500 max-w-md mx-auto mb-6">
+            The league you're looking for doesn't exist or has been removed.
+            Please try selecting a different league from the list.
           </p>
+          <Button 
+            onClick={() => window.history.back()} 
+            className="bg-gradient-to-r from-primary to-primary/80"
+          >
+            Go Back
+          </Button>
         </CardContent>
       </Card>
     );
