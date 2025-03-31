@@ -18,8 +18,8 @@ interface PostProps {
 }
 
 export default function Post({ post, currentUserId }: PostProps) {
-  const [isLiked, setIsLiked] = useState(post.likedByUser);
-  const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [isLiked, setIsLiked] = useState(post?.likedByUser || false);
+  const [likeCount, setLikeCount] = useState(post?.likeCount || 0);
   const [showComments, setShowComments] = useState(false);
   const [comment, setComment] = useState("");
   const [isPostSaved, setIsPostSaved] = useState(false);
@@ -61,7 +61,8 @@ export default function Post({ post, currentUserId }: PostProps) {
     // In a real app, we would save the post to the user's saved posts
   };
 
-  if (!post || !post.user) {
+  // Show loading skeleton if post is not available
+  if (!post) {
     return (
       <div className="bg-white rounded-lg shadow-sm mb-4 overflow-hidden p-4">
         <div className="animate-pulse">
@@ -93,19 +94,19 @@ export default function Post({ post, currentUserId }: PostProps) {
       {/* Post Header */}
       <div className="p-4 pb-2">
         <div className="flex items-center">
-          <Link href={`/profile/${post.user.id}`}>
+          <Link href={`/profile/${post.userId}`}>
             <img 
               className="h-12 w-12 rounded-full object-cover cursor-pointer" 
-              src={post.user.avatar} 
-              alt={post.user.fullName}
+              src="https://via.placeholder.com/100"
+              alt={`User ${post.userId}`}
             />
           </Link>
           <div className="ml-3">
-            <Link href={`/profile/${post.user.id}`}>
-              <h4 className="font-medium cursor-pointer">{post.user.fullName}</h4>
+            <Link href={`/profile/${post.userId}`}>
+              <h4 className="font-medium cursor-pointer">{post.authorName || `User ${post.userId}`}</h4>
             </Link>
             <div className="flex items-center text-sm text-neutral-400">
-              <span>{post.user.sport ? `${post.user.sport} Player` : 'Athlete'}</span>
+              <span>Athlete</span>
               <span className="mx-1">•</span>
               <span>{formatPostDate(post.createdAt)}</span>
             </div>
@@ -249,19 +250,19 @@ export default function Post({ post, currentUserId }: PostProps) {
           </form>
           
           {/* Comments List */}
-          {post.comments && post.comments.length > 0 ? (
+          {post.comments && Array.isArray(post.comments) && post.comments.length > 0 ? (
             <div className="space-y-3">
               {post.comments.map((comment: any) => (
                 <div key={comment.id} className="flex items-start">
                   <img 
-                    src={comment.user.avatar || "https://via.placeholder.com/40"} 
-                    alt={comment.user.fullName} 
+                    src="https://via.placeholder.com/40"
+                    alt="Commenter" 
                     className="w-8 h-8 rounded-full mr-2 flex-shrink-0 object-cover" 
                   />
                   <div>
                     <div className="bg-neutral-50 inline-block py-2 px-3 rounded-2xl text-sm">
-                      <a href={`/profile/${comment.user.id}`} className="font-medium text-neutral-900 mr-1">
-                        {comment.user.fullName}
+                      <a href={`/profile/${comment.userId}`} className="font-medium text-neutral-900 mr-1">
+                        Athlete
                       </a>
                       {comment.content}
                     </div>

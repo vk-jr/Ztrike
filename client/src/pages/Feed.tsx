@@ -15,9 +15,17 @@ export default function Feed() {
     queryKey: [`/api/users/${userId}`],
   });
 
-  const { data: feedPosts, isLoading: isLoadingPosts, fetchNextPage, hasNextPage, isFetchingNextPage } = useQuery({
+  const { data: feedPosts, isLoading: isLoadingPosts } = useQuery({
     queryKey: [`/api/feed?userId=${userId}`],
   });
+  
+  // Added placeholder functions for pagination functionality
+  const fetchNextPage = () => console.log("Fetching next page...");
+  const hasNextPage = false; 
+  const isFetchingNextPage = false;
+  
+  // Create a temporary avatar for the user if it doesn't exist
+  const userAvatar = user?.avatar || "https://via.placeholder.com/40";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,9 +36,7 @@ export default function Feed() {
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {/* Create Post */}
-          {user && (
-            <CreatePost userId={userId} userAvatar={user.avatar} />
-          )}
+          <CreatePost userId={userId} userAvatar={userAvatar} />
           
           {/* Live Matches Alert */}
           <LiveMatches />
@@ -53,10 +59,10 @@ export default function Feed() {
                 </div>
               </div>
             ))
-          ) : feedPosts && feedPosts.length > 0 ? (
+          ) : feedPosts && Array.isArray(feedPosts) && feedPosts.length > 0 ? (
             <>
               {feedPosts.map((post: any) => (
-                <Post key={post.id} post={post} currentUserId={userId} />
+                <Post key={post.id || Math.random()} post={post} currentUserId={userId} />
               ))}
               
               <div className="text-center py-4">
