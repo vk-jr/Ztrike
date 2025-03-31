@@ -177,7 +177,10 @@ export default function WorldMap({ leagues, selectedSport, onSelectLeague }: Wor
                 <Marker 
                   key={league.id} 
                   coordinates={[league.location!.lng, league.location!.lat]}
-                  onClick={() => onSelectLeague(league.id)}
+                  onClick={() => {
+                    console.log("Clicked on league:", league.name, "with ID:", league.id);
+                    onSelectLeague(league.id);
+                  }}
                 >
                   <motion.circle
                     r={8}

@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import Feed from "@/pages/Feed";
 import Network from "@/pages/Network";
 import Leagues from "@/pages/Leagues";
+import Teams from "@/pages/Teams";
 import Messages from "@/pages/Messages";
 import Notifications from "@/pages/Notifications";
 import CreateAccount from "@/pages/CreateAccount";
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/" component={Feed} />
       <Route path="/network" component={Network} />
       <Route path="/leagues" component={Leagues} />
+      <Route path="/teams" component={Teams} />
       <Route path="/messages" component={Messages} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/create-account" component={CreateAccount} />

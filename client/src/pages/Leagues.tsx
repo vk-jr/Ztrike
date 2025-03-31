@@ -128,8 +128,17 @@ export default function Leagues() {
 
   // Handle league selection from map
   const handleMapLeagueSelect = (leagueId: number) => {
+    console.log("Selected league from map:", leagueId);
     setActiveLeagueId(leagueId);
     setShowMap(false); // Hide map when a league is selected
+    
+    // Add a small delay to ensure the league details component is rendered
+    setTimeout(() => {
+      const detailsElement = document.getElementById('league-details');
+      if (detailsElement) {
+        detailsElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 300);
   };
 
   return (
@@ -200,7 +209,9 @@ export default function Leagues() {
               ← Back to All Leagues
             </Button>
           </div>
-          <LeagueDetails leagueId={activeLeagueId} userId={userId} />
+          <div id="league-details">
+            <LeagueDetails leagueId={activeLeagueId} userId={userId} />
+          </div>
         </div>
       ) : (
         /* Main Leagues Grid */

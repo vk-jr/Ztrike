@@ -8,7 +8,8 @@ import {
   Bell, 
   Search,
   ChevronDown,
-  Volleyball 
+  Volleyball,
+  UsersRound
 } from "lucide-react";
 
 export default function Header() {
@@ -70,6 +71,15 @@ export default function Header() {
             >
               <Trophy className="h-5 w-5" />
               <span className="text-xs mt-1">Leagues</span>
+            </Link>
+            
+            {/* Teams */}
+            <Link 
+              href="/teams" 
+              className={`flex flex-col items-center justify-center px-3 py-2 text-sm font-medium rounded-md ${isActive('/teams') ? 'text-primary border-b-2 border-primary' : 'text-neutral-400 hover:text-primary transition-colors'}`}
+            >
+              <UsersRound className="h-5 w-5" />
+              <span className="text-xs mt-1">Teams</span>
             </Link>
             
             {/* Messaging */}
@@ -163,6 +173,14 @@ export default function Header() {
           >
             <Trophy className="h-5 w-5" />
             <span className="text-xs mt-1">Leagues</span>
+          </Link>
+          
+          <Link
+            href="/teams"
+            className={`flex flex-col items-center justify-center py-2 flex-1 ${isActive('/teams') ? 'text-primary' : 'text-neutral-400'}`}
+          >
+            <UsersRound className="h-5 w-5" />
+            <span className="text-xs mt-1">Teams</span>
           </Link>
           
           <Link 

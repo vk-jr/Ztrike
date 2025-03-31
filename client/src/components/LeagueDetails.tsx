@@ -19,6 +19,7 @@ interface LeagueDetailsProps {
 }
 
 export default function LeagueDetails({ leagueId, userId }: LeagueDetailsProps) {
+  console.log("LeagueDetails rendered with ID:", leagueId);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
 
