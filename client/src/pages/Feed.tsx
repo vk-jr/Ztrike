@@ -28,7 +28,7 @@ export default function Feed() {
   const userAvatar = user?.avatar || "https://via.placeholder.com/40";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-16 md:pb-8">
       <div className="flex flex-col md:flex-row gap-6">
         {/* Left Sidebar */}
         <div className="md:w-64 lg:w-72">
@@ -70,15 +70,14 @@ export default function Feed() {
           ) : feedPosts && Array.isArray(feedPosts) && feedPosts.length > 0 ? (
             <>
               {feedPosts.map((post: any) => (
-                <div className="bg-white rounded-lg shadow-md mb-4">
-                  <Post key={post.id || Math.random()} post={post} currentUserId={userId} />
+                <div key={post.id || Math.random()} className="bg-white rounded-lg shadow-md mb-4">
+                  <Post post={post} currentUserId={userId} />
                 </div>
               ))}
               
               <div className="bg-white rounded-lg shadow-md p-4 text-center">
                 <Button 
-                  variant="outline"
-                  className="px-6 py-2"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
                   onClick={() => fetchNextPage()}
                   disabled={!hasNextPage || isFetchingNextPage}
                 >
@@ -92,8 +91,8 @@ export default function Feed() {
             </>
           ) : (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <h3 className="text-lg font-medium text-neutral-600">No posts in your feed yet</h3>
-              <p className="text-neutral-400 mt-2">Connect with more athletes or create your first post to get started!</p>
+              <h3 className="text-lg font-medium text-gray-600">No posts in your feed yet</h3>
+              <p className="text-gray-500 mt-2">Connect with more athletes or create your first post to get started!</p>
             </div>
           )}
         </div>
