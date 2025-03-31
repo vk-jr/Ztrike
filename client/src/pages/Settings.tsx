@@ -26,53 +26,53 @@ export default function Settings() {
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Settings Sidebar */}
-        <div className="col-span-1 bg-white rounded-lg shadow-sm p-4">
+        <div className="col-span-1 bg-card text-card-foreground rounded-lg shadow-sm p-4">
           <nav className="space-y-1">
             <Link 
               href="/settings" 
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings' ? 'bg-blue-50 text-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
               <SettingsIcon className="h-5 w-5 mr-3" />
               General
             </Link>
             <Link 
               href="/settings/profile" 
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/profile' ? 'bg-blue-50 text-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/profile' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
               <User className="h-5 w-5 mr-3" />
               Profile
             </Link>
             <Link 
               href="/settings/appearance" 
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/appearance' ? 'bg-blue-50 text-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/appearance' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
               <Palette className="h-5 w-5 mr-3" />
               Appearance
             </Link>
             <Link 
               href="/settings/privacy" 
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/privacy' ? 'bg-blue-50 text-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/privacy' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
               <Lock className="h-5 w-5 mr-3" />
               Privacy
             </Link>
             <Link 
               href="/settings/notifications" 
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/notifications' ? 'bg-blue-50 text-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/notifications' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
               <Bell className="h-5 w-5 mr-3" />
               Notifications
             </Link>
             <Link 
               href="/settings/accessibility" 
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/accessibility' ? 'bg-blue-50 text-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/accessibility' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
               <Accessibility className="h-5 w-5 mr-3" />
               Accessibility
             </Link>
             <Link 
               href="/settings/language" 
-              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/language' ? 'bg-blue-50 text-primary' : 'text-neutral-600 hover:bg-neutral-50'}`}
+              className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${location === '/settings/language' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted'}`}
             >
               <Globe className="h-5 w-5 mr-3" />
               Language
@@ -81,7 +81,7 @@ export default function Settings() {
         </div>
         
         {/* Settings Content */}
-        <div className="col-span-1 md:col-span-3 bg-white rounded-lg shadow-sm p-6">
+        <div className="col-span-1 md:col-span-3 bg-card text-card-foreground rounded-lg shadow-sm p-6">
           <Tabs defaultValue={tabFromUrl} onValueChange={(value) => {
             if (value === "appearance") {
               setLocation("/settings/appearance");
@@ -102,9 +102,9 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-medium">Account Information</h3>
-                      <p className="text-sm text-neutral-500">Update your account details</p>
+                      <p className="text-sm text-muted-foreground">Update your account details</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-neutral-400" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
                 
@@ -112,9 +112,9 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-medium">Password</h3>
-                      <p className="text-sm text-neutral-500">Change your password</p>
+                      <p className="text-sm text-muted-foreground">Change your password</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-neutral-400" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
                 
@@ -122,9 +122,9 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-medium">Email Preferences</h3>
-                      <p className="text-sm text-neutral-500">Manage email notifications</p>
+                      <p className="text-sm text-muted-foreground">Manage email notifications</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-neutral-400" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
                 
@@ -132,9 +132,9 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-medium">Connected Accounts</h3>
-                      <p className="text-sm text-neutral-500">Connect with third-party services</p>
+                      <p className="text-sm text-muted-foreground">Connect with third-party services</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-neutral-400" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
                 
@@ -142,9 +142,9 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-medium text-red-500">Delete Account</h3>
-                      <p className="text-sm text-neutral-500">Permanently delete your account</p>
+                      <p className="text-sm text-muted-foreground">Permanently delete your account</p>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-neutral-400" />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </div>
               </div>
@@ -206,7 +206,7 @@ function AppearanceSettings() {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Appearance</h2>
-      <p className="text-sm text-neutral-500 mb-6">Customize how SportConnect looks for you</p>
+      <p className="text-sm text-muted-foreground mb-6">Customize how SportConnect looks for you</p>
       
       <div className="space-y-6">
         <div>
@@ -245,18 +245,18 @@ function AppearanceSettings() {
         <div className="border-t pt-6">
           <h3 className="text-base font-medium mb-3">Interface Density</h3>
           <div className="flex space-x-4">
-            <button className="px-4 py-2 border rounded-md bg-blue-50 border-primary text-primary">Comfortable</button>
-            <button className="px-4 py-2 border rounded-md">Compact</button>
+            <button className="px-4 py-2 border rounded-md bg-primary/10 border-primary text-primary">Comfortable</button>
+            <button className="px-4 py-2 border rounded-md text-muted-foreground hover:bg-muted">Compact</button>
           </div>
-          <p className="text-xs text-neutral-500 mt-2">Adjust the density of content to show more or less on screen</p>
+          <p className="text-xs text-muted-foreground mt-2">Adjust the density of content to show more or less on screen</p>
         </div>
         
         <div className="border-t pt-6">
           <h3 className="text-base font-medium mb-3">Font Size</h3>
           <div className="flex space-x-4">
-            <button className="px-4 py-2 border rounded-md">Small</button>
-            <button className="px-4 py-2 border rounded-md bg-blue-50 border-primary text-primary">Medium</button>
-            <button className="px-4 py-2 border rounded-md">Large</button>
+            <button className="px-4 py-2 border rounded-md text-muted-foreground hover:bg-muted">Small</button>
+            <button className="px-4 py-2 border rounded-md bg-primary/10 border-primary text-primary">Medium</button>
+            <button className="px-4 py-2 border rounded-md text-muted-foreground hover:bg-muted">Large</button>
           </div>
         </div>
       </div>
@@ -278,7 +278,7 @@ function ThemeCard({ name, value, bgColor, textColor, primary, isActive, onClick
   return (
     <button 
       onClick={onClick}
-      className={`group flex flex-col items-center border rounded-lg p-4 hover:border-primary transition-colors ${isActive ? 'border-primary ring-1 ring-primary' : 'border-neutral-200'}`}
+      className={`group flex flex-col items-center border rounded-lg p-4 hover:border-primary transition-colors ${isActive ? 'border-primary ring-1 ring-primary' : 'border-muted'}`}
     >
       <div 
         className="w-full h-20 rounded-md mb-2 flex flex-col overflow-hidden border"

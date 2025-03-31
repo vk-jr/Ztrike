@@ -33,7 +33,7 @@ export default function Header() {
   const isActive = (path: string) => location === path;
 
   return (
-    <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+    <header className="bg-card shadow-sm fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -191,13 +191,13 @@ export default function Header() {
       
       {/* Mobile Search (conditionally rendered) */}
       {mobileSearchOpen && (
-        <div className="md:hidden px-4 py-2 bg-white border-t border-neutral-200">
+        <div className="md:hidden px-4 py-2 bg-card border-t border-border">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-neutral-300" />
+              <Search className="h-4 w-4 text-muted-foreground" />
             </div>
             <input 
-              className="block w-full pl-10 pr-3 py-2 border border-neutral-200 rounded-full bg-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
+              className="block w-full pl-10 pr-3 py-2 border border-input rounded-full bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" 
               placeholder="Search athletes, teams, leagues..." 
               type="search"
             />
@@ -206,7 +206,7 @@ export default function Header() {
       )}
       
       {/* Mobile Navigation */}
-      <div className="md:hidden border-t border-neutral-200 bg-white fixed bottom-0 left-0 right-0 z-50">
+      <div className="md:hidden border-t border-border bg-card fixed bottom-0 left-0 right-0 z-50">
         <div className="flex justify-around">
           <Link 
             href="/" 
