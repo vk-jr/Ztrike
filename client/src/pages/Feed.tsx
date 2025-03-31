@@ -28,23 +28,31 @@ export default function Feed() {
   const userAvatar = user?.avatar || "https://via.placeholder.com/40";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8">
       <div className="flex flex-col md:flex-row gap-6">
         {/* Left Sidebar */}
-        <LeftSidebar />
+        <div className="md:w-64 lg:w-72">
+          <div className="bg-white rounded-lg shadow-md p-4 sticky top-20">
+            <LeftSidebar />
+          </div>
+        </div>
         
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {/* Create Post */}
-          <CreatePost userId={userId} userAvatar={userAvatar} />
+          <div className="bg-white rounded-lg shadow-md mb-4 p-4">
+            <CreatePost userId={userId} userAvatar={userAvatar} />
+          </div>
           
           {/* Live Matches Alert */}
-          <LiveMatches />
+          <div className="bg-white rounded-lg shadow-md mb-4 p-4">
+            <LiveMatches />
+          </div>
           
           {/* Feed Posts */}
           {isLoadingPosts ? (
             Array(3).fill(0).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm mb-4 overflow-hidden p-4">
+              <div key={index} className="bg-white rounded-lg shadow-md mb-4 overflow-hidden p-4">
                 <div className="animate-pulse">
                   <div className="flex items-center">
                     <Skeleton className="h-12 w-12 rounded-full" />
@@ -62,10 +70,12 @@ export default function Feed() {
           ) : feedPosts && Array.isArray(feedPosts) && feedPosts.length > 0 ? (
             <>
               {feedPosts.map((post: any) => (
-                <Post key={post.id || Math.random()} post={post} currentUserId={userId} />
+                <div className="bg-white rounded-lg shadow-md mb-4">
+                  <Post key={post.id || Math.random()} post={post} currentUserId={userId} />
+                </div>
               ))}
               
-              <div className="text-center py-4">
+              <div className="bg-white rounded-lg shadow-md p-4 text-center">
                 <Button 
                   variant="outline"
                   className="px-6 py-2"
@@ -81,7 +91,7 @@ export default function Feed() {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <h3 className="text-lg font-medium text-neutral-600">No posts in your feed yet</h3>
               <p className="text-neutral-400 mt-2">Connect with more athletes or create your first post to get started!</p>
             </div>
@@ -89,7 +99,11 @@ export default function Feed() {
         </div>
         
         {/* Right Sidebar */}
-        <RightSidebar />
+        <div className="md:w-72 lg:w-80">
+          <div className="bg-white rounded-lg shadow-md p-4 sticky top-20">
+            <RightSidebar />
+          </div>
+        </div>
       </div>
     </div>
   );

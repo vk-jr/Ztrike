@@ -8,6 +8,8 @@ import { Link } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+import TeamLeaderboard from "@/components/TeamLeaderboard";
+
 export default function Teams() {
   const { toast } = useToast();
   const [selectionTab, setSelectionTab] = useState<'active' | 'history'>('active');
@@ -107,6 +109,11 @@ export default function Teams() {
 
   return (
     <div className="container mx-auto px-4 pt-20 pb-16 max-w-7xl">
+      {/* Team Leaderboard Section */}
+      <div className="mb-16">
+        <TeamLeaderboard />
+      </div>
+      
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left column - My Teams */}
         <div className="w-full lg:w-2/3">
