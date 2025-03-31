@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Bell, Check, ChevronRight, Users } from "lucide-react";
+import { AlertCircle, Bell, Check, ChevronRight, Trophy, Users } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -108,7 +108,7 @@ export default function Teams() {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-20 pb-16 max-w-7xl">
+    <div className="container mx-auto px-4 pt-20 pb-20 md:pb-16 max-w-7xl">
       {/* Team Leaderboard Section */}
       <div className="mb-16">
         <TeamLeaderboard />
@@ -117,19 +117,28 @@ export default function Teams() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left column - My Teams */}
         <div className="w-full lg:w-2/3">
-          <h1 className="text-2xl font-bold mb-6">My Teams</h1>
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md p-5 mb-6">
+            <h1 className="text-2xl font-bold text-white flex items-center">
+              <Trophy className="h-6 w-6 mr-3 text-yellow-300" />
+              My Teams
+            </h1>
+            <p className="text-blue-100 mt-1">Teams you've joined and are actively participating in</p>
+          </div>
           
           {teamsLoading ? (
             <div className="flex items-center justify-center h-40">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : subscribedTeams?.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Users className="h-12 w-12 mx-auto text-neutral-300 mb-3" />
-                <h3 className="text-lg font-medium mb-2">No Teams Yet</h3>
-                <p className="text-neutral-500 mb-4">You haven't joined any teams yet. Browse selection processes to apply.</p>
-                <Button onClick={() => document.getElementById('selection-processes')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Card className="border-none shadow-md">
+              <CardContent className="p-8 text-center">
+                <Users className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium mb-2 text-gray-700">No Teams Yet</h3>
+                <p className="text-gray-500 mb-4 max-w-md mx-auto">You haven't joined any teams yet. Browse selection processes to apply for team positions.</p>
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => document.getElementById('selection-processes')?.scrollIntoView({ behavior: 'smooth' })}
+                >
                   Find Teams
                 </Button>
               </CardContent>
@@ -137,16 +146,18 @@ export default function Teams() {
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               {subscribedTeams?.map(team => (
-                <Card key={team.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 flex items-center">
-                    <img 
-                      src={team.logo} 
-                      alt={team.name} 
-                      className="h-16 w-16 object-contain mr-4"
-                    />
-                    <div>
+                <Card key={team.id} className="overflow-hidden hover:shadow-lg transition-shadow border-none">
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 flex items-center">
+                    <div className="bg-white p-2 rounded-lg mr-4">
+                      <img 
+                        src={team.logo} 
+                        alt={team.name} 
+                        className="h-12 w-12 object-contain"
+                      />
+                    </div>
+                    <div className="text-white">
                       <h3 className="font-bold text-xl">{team.name}</h3>
-                      <div className="flex items-center gap-2 text-sm text-neutral-500">
+                      <div className="flex items-center gap-2 text-sm text-blue-100">
                         <span>{team.sport}</span>
                         <span>•</span>
                         <span>{team.league}</span>
@@ -154,13 +165,17 @@ export default function Teams() {
                     </div>
                   </div>
                   
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 bg-white">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-neutral-500">Joined on</p>
-                        <p className="font-medium">{new Date(team.joined).toLocaleDateString()}</p>
+                        <p className="text-sm text-gray-500">Joined on</p>
+                        <p className="font-medium text-gray-800">{new Date(team.joined).toLocaleDateString()}</p>
                       </div>
-                      <Button variant="outline" size="sm" asChild>
+                      <Button 
+                        className="bg-blue-600 hover:bg-blue-700 text-white" 
+                        size="sm" 
+                        asChild
+                      >
                         <Link href={`/teams/${team.id}`}>
                           View Details
                           <ChevronRight className="ml-1 h-4 w-4" />
@@ -175,18 +190,24 @@ export default function Teams() {
           
           {/* Selection Processes Section */}
           <div id="selection-processes" className="mt-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Selection Processes</h2>
-              <div className="flex space-x-2">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md p-5 mb-6 flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white flex items-center">
+                  <Users className="h-6 w-6 mr-3 text-yellow-300" />
+                  Selection Processes
+                </h2>
+                <p className="text-blue-100 mt-1">Track your applications and selection progress</p>
+              </div>
+              <div className="flex space-x-2 bg-white/10 p-1 rounded-lg">
                 <Button 
-                  variant={selectionTab === 'active' ? "default" : "outline"}
+                  className={`${selectionTab === 'active' ? 'bg-white text-blue-700' : 'bg-transparent text-white hover:bg-white/20'}`}
                   size="sm"
                   onClick={() => setSelectionTab('active')}
                 >
                   Active
                 </Button>
                 <Button 
-                  variant={selectionTab === 'history' ? "default" : "outline"}
+                  className={`${selectionTab === 'history' ? 'bg-white text-blue-700' : 'bg-transparent text-white hover:bg-white/20'}`}
                   size="sm"
                   onClick={() => setSelectionTab('history')}
                 >
@@ -197,18 +218,18 @@ export default function Teams() {
             
             {processesLoading ? (
               <div className="flex items-center justify-center h-40">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : filteredSelections.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Bell className="h-12 w-12 mx-auto text-neutral-300 mb-3" />
-                  <h3 className="text-lg font-medium mb-2">
+              <Card className="border-none shadow-md">
+                <CardContent className="p-8 text-center">
+                  <Bell className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium mb-2 text-gray-700">
                     {selectionTab === 'active' ? 'No Active Selection Processes' : 'No Selection History'}
                   </h3>
-                  <p className="text-neutral-500">
+                  <p className="text-gray-500 max-w-md mx-auto">
                     {selectionTab === 'active' 
-                      ? "You don't have any ongoing team selection processes."
+                      ? "You don't have any ongoing team selection processes. Apply to teams to get started."
                       : "You haven't participated in any team selections yet."}
                   </p>
                 </CardContent>
@@ -216,27 +237,29 @@ export default function Teams() {
             ) : (
               <div className="space-y-4">
                 {filteredSelections.map(process => (
-                  <Card key={process.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="flex items-center p-4 border-b">
-                      <img 
-                        src={process.teamLogo} 
-                        alt={process.teamName} 
-                        className="h-14 w-14 object-contain mr-4"
-                      />
+                  <Card key={process.id} className="overflow-hidden hover:shadow-lg transition-shadow border-none">
+                    <div className="flex items-center p-5 border-b border-gray-100">
+                      <div className="bg-gray-50 p-2 rounded-lg mr-4">
+                        <img 
+                          src={process.teamLogo} 
+                          alt={process.teamName} 
+                          className="h-14 w-14 object-contain"
+                        />
+                      </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-lg">{process.teamName}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-lg text-gray-800">{process.teamName}</h3>
                           <Badge 
-                            variant={
-                              process.status === 'In Progress' ? "default" : 
-                              process.status === 'Applied' ? "outline" :
-                              process.result === 'Accepted' ? "default" : "destructive"
+                            className={
+                              process.status === 'In Progress' ? "bg-blue-600 hover:bg-blue-700" : 
+                              process.status === 'Applied' ? "bg-gray-100 text-gray-800 hover:bg-gray-200" :
+                              process.result === 'Accepted' ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
                             }
                           >
                             {process.status === 'Completed' ? process.result : process.status}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-neutral-500">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
                           <span>{process.sport}</span>
                           <span>•</span>
                           <span>{process.league}</span>
@@ -244,9 +267,8 @@ export default function Teams() {
                       </div>
                       {process.status !== 'Completed' && (
                         <Button 
-                          variant="outline" 
+                          className="bg-blue-600 hover:bg-blue-700 text-white hidden sm:flex" 
                           size="sm" 
-                          className="hidden sm:flex"
                           asChild
                         >
                           <Link href={`/teams/selection/${process.id}`}>
@@ -257,40 +279,40 @@ export default function Teams() {
                       )}
                     </div>
                     
-                    <CardContent className="p-4">
+                    <CardContent className="p-5 bg-white">
                       {process.status === 'Completed' ? (
                         <div>
-                          <p className="text-sm text-neutral-600 mb-1">
+                          <p className="text-sm text-gray-600 mb-1">
                             <span className="font-medium">Process period:</span> {new Date(process.startDate).toLocaleDateString()} - {new Date(process.endDate).toLocaleDateString()}
                           </p>
-                          <p className="text-sm text-neutral-600 mb-3">
+                          <p className="text-sm text-gray-600 mb-3">
                             <span className="font-medium">Final stage:</span> {process.stage}
                           </p>
                           {process.feedback && (
-                            <div className="bg-neutral-50 p-3 rounded-md border text-sm">
-                              <p className="font-medium mb-1">Feedback:</p>
-                              <p className="text-neutral-600">{process.feedback}</p>
+                            <div className="bg-blue-50 p-4 rounded-md border border-blue-100 text-sm">
+                              <p className="font-medium mb-1 text-blue-800">Feedback:</p>
+                              <p className="text-blue-700">{process.feedback}</p>
                             </div>
                           )}
                         </div>
                       ) : (
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <p className="text-sm font-medium">
-                              Current Stage: <span className="text-primary">{process.stage}</span>
+                            <p className="text-sm font-medium text-gray-700">
+                              Current Stage: <span className="text-blue-700">{process.stage}</span>
                             </p>
-                            <p className="text-sm text-neutral-500">
+                            <p className="text-sm text-gray-500">
                               {new Date(process.startDate).toLocaleDateString()} - {new Date(process.endDate).toLocaleDateString()}
                             </p>
                           </div>
                           
                           {process.nextStage && (
-                            <div className="bg-neutral-50 p-3 rounded-md border">
+                            <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                               <div className="flex items-start">
-                                <AlertCircle className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                                <AlertCircle className="h-5 w-5 text-blue-600 mr-2 flex-shrink-0 mt-0.5" />
                                 <div>
-                                  <p className="text-sm font-medium">Next: {process.nextStage}</p>
-                                  <p className="text-xs text-neutral-500">
+                                  <p className="text-sm font-medium text-blue-800">Next: {process.nextStage}</p>
+                                  <p className="text-xs text-blue-600">
                                     Scheduled for {new Date(process.nextStageDate).toLocaleDateString()}
                                   </p>
                                 </div>
@@ -300,9 +322,8 @@ export default function Teams() {
                           
                           <div className="mt-4 flex justify-end">
                             <Button 
-                              variant="outline" 
+                              className="bg-blue-600 hover:bg-blue-700 text-white sm:hidden" 
                               size="sm" 
-                              className="sm:hidden"
                               asChild
                             >
                               <Link href={`/teams/selection/${process.id}`}>
@@ -323,24 +344,28 @@ export default function Teams() {
         
         {/* Right column - Available Teams */}
         <div className="w-full lg:w-1/3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Teams</CardTitle>
-              <CardDescription>Teams currently accepting applications</CardDescription>
+          <Card className="border-none shadow-md overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+              <CardTitle className="flex items-center">
+                <Users className="h-5 w-5 mr-2 text-blue-200" />
+                Available Teams
+              </CardTitle>
+              <CardDescription className="text-blue-100">Teams currently accepting applications</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-4">
               <div className="space-y-4">
-                <div className="flex items-center p-3 bg-neutral-50 rounded-lg">
+                <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-100 hover:shadow-md transition-all">
                   <img 
                     src="https://upload.wikimedia.org/wikipedia/en/thumb/2/25/New_York_Knicks_logo.svg/1200px-New_York_Knicks_logo.svg.png" 
                     alt="New York Knicks" 
                     className="h-12 w-12 object-contain mr-3"
                   />
                   <div className="flex-1">
-                    <h4 className="font-medium">New York Knicks</h4>
-                    <p className="text-sm text-neutral-500">NBA • Point Guard</p>
+                    <h4 className="font-medium text-gray-800">New York Knicks</h4>
+                    <p className="text-sm text-gray-500">NBA • Point Guard</p>
                   </div>
                   <Button 
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                     size="sm"
                     onClick={() => handleJoinSelection('New York Knicks')}
                   >
