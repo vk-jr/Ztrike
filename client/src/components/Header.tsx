@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link, useLocation } from "wouter";
+import { AuthContext } from "@/App";
 import { 
   Home, 
   Users, 
@@ -29,9 +30,10 @@ import ThemeSelector from "@/components/ui/ThemeSelector";
 import { applyTheme, getCurrentTheme } from "@/lib/themeService";
 
 export default function Header() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(getCurrentTheme());
+  const { user, logout } = useContext(AuthContext);
 
   useEffect(() => {
     setCurrentTheme(getCurrentTheme());
@@ -145,25 +147,27 @@ export default function Header() {
                   <button className="flex items-center text-sm focus:outline-none hover:opacity-80 transition-opacity">
                     <img 
                       className="h-8 w-8 rounded-full object-cover border-2 border-blue-200" 
-                      src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80&w=100&h=100" 
+                      src={user?.avatar || "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80&w=100&h=100"} 
                       alt="User profile"
                     />
-                    <span className="hidden lg:block ml-2 font-medium text-gray-700">Michael J.</span>
+                    <span className="hidden lg:block ml-2 font-medium text-gray-700">
+                      {user?.fullName ? user.fullName.split(' ')[0] : 'User'}
+                    </span>
                     <ChevronDown className="ml-1 h-4 w-4 text-gray-400" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="flex items-center justify-start p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">Michael Johnson</p>
+                      <p className="font-medium">{user?.fullName || 'User'}</p>
                       <p className="w-[200px] truncate text-sm text-gray-500">
-                        @michaeljohnson
+                        @{user?.username || 'user'}
                       </p>
                     </div>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/profile/1" className="cursor-pointer flex w-full items-center">
+                    <Link href={`/profile/${user?.id || 1}`} className="cursor-pointer flex w-full items-center">
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </Link>
@@ -188,11 +192,17 @@ export default function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/logout" className="cursor-pointer flex w-full items-center text-red-500">
+                  <DropdownMenuItem>
+                    <button 
+                      className="cursor-pointer flex w-full items-center text-red-500"
+                      onClick={() => {
+                        logout();
+                        setLocation('/login');
+                      }}
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Logout</span>
-                    </Link>
+                    </button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

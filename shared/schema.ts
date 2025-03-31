@@ -14,12 +14,22 @@ export const users = pgTable("users", {
   position: text("position"),
   team: text("team"),
   bio: text("bio"),
+  isVerified: boolean("is_verified").default(false),
+  resetToken: text("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
+  lastLogin: timestamp("last_login"),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  isVerified: true,
+  resetToken: true,
+  resetTokenExpiry: true,
+  lastLogin: true,
+  isActive: true,
 });
 
 // Post model

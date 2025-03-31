@@ -11,5 +11,23 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: true
+});
+
+// Export the database instance
 export const db = drizzle({ client: pool, schema });
+
+// Function to check database connection
+export async function checkDatabaseConnection() {
+  try {
+    const client = await pool.connect();
+    client.release();
+    console.log("Successfully connected to the database");
+    return true;
+  } catch (error) {
+    console.error("Error connecting to the database:", error);
+    return false;
+  }
+}

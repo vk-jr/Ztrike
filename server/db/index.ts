@@ -10,10 +10,10 @@ dotenv.config();
 // Use serverless driver in production, regular pg for development
 let connectionString = process.env.DATABASE_URL || '';
 
-// For local development without SSL
+// Always use SSL for connections
 const client = postgres(connectionString, { 
   max: 1,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false 
+  ssl: { rejectUnauthorized: false }
 });
 
 export const db = drizzle(client);
@@ -35,8 +35,8 @@ export async function checkDatabaseConnection() {
 export async function runMigrations() {
   try {
     console.log('[DB] Running migrations...');
-    // Uncomment to run migrations in production
-    // await migrate(db, { migrationsFolder: './drizzle' });
+    // Run migrations in production
+    await migrate(db, { migrationsFolder: './migrations' });
     console.log('[DB] Migrations completed successfully');
   } catch (error) {
     console.error('[DB] Error running migrations:', error);

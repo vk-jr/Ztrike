@@ -1,7 +1,8 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 import {
   insertUserSchema,
   insertPostSchema,
@@ -12,9 +13,140 @@ import {
   insertCommentSchema,
 } from "@shared/schema";
 
+// Create session type
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+  }
+}
+
+// Authentication middleware
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.session && req.session.userId) {
+    return next();
+  }
+  res.status(401).json({ message: "Unauthorized" });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // All routes are already prefixed with /api in their definitions
 
+  // Authentication routes
+  app.post("/api/auth/register", async (req: Request, res: Response) => {
+    try {
+      const registerSchema = insertUserSchema.extend({
+        password: z.string().min(6),
+      });
+      
+      const userData = registerSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+      
+      const existingUsername = await storage.getUserByUsername(userData.username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
+      // Create user
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+      });
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(201).json({ 
+        message: "User registered successfully",
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to register user" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
+    try {
+      const loginSchema = z.object({
+        email: z.string().email(),
+        password: z.string().min(1),
+        rememberMe: z.boolean().optional(),
+      });
+      
+      const { email, password } = loginSchema.parse(req.body);
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Set session
+      req.session.userId = user.id;
+      
+      // Update last login time
+      await storage.updateUserLastLogin(user.id);
+      
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.status(200).json({ 
+        message: "Login successful",
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors });
+      }
+      res.status(500).json({ message: "Failed to log in" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req: Request, res: Response) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to log out" });
+      }
+      res.clearCookie("connect.sid");
+      res.status(200).json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/me", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = req.session.userId!;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        req.session.destroy(() => {});
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(200).json({ user: userWithoutPassword });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user data" });
+    }
+  });
+  
   // User routes
   app.get("/api/users/:id", async (req, res) => {
     const userId = parseInt(req.params.id);

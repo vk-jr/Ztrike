@@ -1,11 +1,32 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { checkDatabaseConnection } from "./db/index";
+import { checkDatabaseConnection, runMigrations } from "./db/index";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure session management
+const PgSession = connectPgSimple(session);
+app.use(session({
+  store: new PgSession({
+    pool,
+    tableName: 'session', // Default table name
+    createTableIfMissing: true, // Create the table if it doesn't exist
+  }),
+  secret: process.env.SESSION_SECRET || 'athlete-network-secret-key', 
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+  }
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -38,11 +59,13 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Check database connection
+  // Check database connection and run migrations
   try {
     const dbConnected = await checkDatabaseConnection();
     if (dbConnected) {
       log('Successfully connected to the PostgreSQL database');
+      // Run migrations to create database tables
+      await runMigrations();
     } else {
       log('WARNING: Failed to connect to the PostgreSQL database');
     }

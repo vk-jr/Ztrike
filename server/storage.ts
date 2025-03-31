@@ -36,6 +36,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserLastLogin(userId: number): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   searchUsers(query: string): Promise<User[]>;
   
@@ -365,9 +366,25 @@ export class MemStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const newUser: User = { ...user, id, createdAt: new Date() };
+    const newUser: User = { 
+      ...user, 
+      id, 
+      createdAt: new Date(),
+      isVerified: false,
+      isActive: true,
+      lastLogin: new Date()
+    };
     this.users.set(id, newUser);
     return newUser;
+  }
+  
+  async updateUserLastLogin(userId: number): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, lastLogin: new Date() };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -638,8 +655,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const [newUser] = await db.insert(users).values(user).returning();
+    // Set default values for the new fields
+    const userWithDefaults = {
+      ...user,
+      isVerified: false,
+      isActive: true,
+      lastLogin: new Date()
+    };
+    
+    const [newUser] = await db.insert(users).values(userWithDefaults).returning();
     return newUser;
+  }
+  
+  async updateUserLastLogin(userId: number): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ lastLogin: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
   }
 
   async getAllUsers(): Promise<User[]> {
