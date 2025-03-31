@@ -34,7 +34,9 @@ import {
   Heart,
   MoveUp,
   BarChart3,
-  GanttChart
+  GanttChart,
+  Edit,
+  Share2
 } from "lucide-react";
 
 export default function Profile() {
@@ -92,59 +94,94 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-        {/* Cover photo */}
-        <div className="h-48 bg-gradient-to-r from-primary to-green-500 relative"></div>
-        
-        {/* Profile info */}
-        <div className="px-4 sm:px-6 lg:px-8 pb-6">
-          <div className="flex flex-col md:flex-row md:items-end -mt-16 md:-mt-20">
-            <img 
-              src={user.avatar} 
-              alt={user.fullName} 
-              className="h-32 w-32 rounded-full border-4 border-white object-cover"
-            />
-            
-            <div className="mt-4 md:mt-0 md:ml-6 flex-1">
-              <h1 className="text-2xl font-bold">{user.fullName}</h1>
-              <p className="text-neutral-500">{user.sport} • {user.position} • {user.team}</p>
-            </div>
-            
-            <div className="mt-4 md:mt-0 flex space-x-3">
-              {!isOwnProfile && (
-                <>
-                  <Button className="flex items-center">
-                    <UserPlus className="mr-2 h-4 w-4" /> Connect
-                  </Button>
-                  <Button variant="outline" size="icon">
-                    <MessageSquare className="h-5 w-5" />
-                  </Button>
-                </>
-              )}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Profile header with cover image and profile info */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        {/* Cover image with gradient overlay for better text visibility */}
+        <div className="h-64 bg-gradient-to-r from-primary/80 to-blue-600/90 rounded-t-xl overflow-hidden relative">
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+          <div className="h-full w-full bg-[url('https://images.unsplash.com/photo-1504450758481-7338eba7524a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1169&q=80')] bg-cover bg-center opacity-30"></div>
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/60 to-transparent"></div>
+        </div>
+        {/* Profile info - redesigned */}
+        <div className="relative px-8 py-6">
+          {/* Profile picture overlaying the cover */}
+          <div className="absolute -top-24 left-10">
+            <div className="relative">
+              <img 
+                src={user.avatar} 
+                alt={user.fullName} 
+                className="h-36 w-36 rounded-full border-4 border-white object-cover shadow-lg"
+              />
               {isOwnProfile && (
-                <Button variant="outline">Edit Profile</Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="absolute bottom-2 right-0 bg-white h-8 w-8 rounded-full shadow-md"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
               )}
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-5 w-5" />
-              </Button>
             </div>
           </div>
           
-          {/* Stats bar */}
-          <div className="flex mt-6 pt-4 border-t border-neutral-200">
-            <div className="mr-6">
-              <div className="font-semibold">856</div>
-              <div className="text-sm text-neutral-500">Connections</div>
+          <div className="ml-44">
+            {/* User Info */}
+            <div className="flex flex-wrap justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">{user.fullName}</h1>
+                <div className="flex flex-wrap items-center gap-2 mt-1 mb-3">
+                  <Badge variant="secondary" className="text-primary bg-primary/10 border-primary/20 font-medium">
+                    {user.sport}
+                  </Badge>
+                  <span className="text-sm text-neutral-500">
+                    {user.position} {user.team ? `@ ${user.team}` : ''}
+                  </span>
+                </div>
+                <p className="text-sm text-neutral-600 max-w-2xl mb-4">
+                  {user.bio || "Professional athlete passionate about sports excellence and personal growth. Committed to pushing boundaries and inspiring the next generation of athletes."}
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
+                {!isOwnProfile ? (
+                  <>
+                    <Button className="flex items-center">
+                      <UserPlus className="mr-2 h-4 w-4" /> Connect
+                    </Button>
+                    <Button variant="outline">
+                      <MessageSquare className="h-4 w-4 mr-2" /> Message
+                    </Button>
+                  </>
+                ) : (
+                  <Button>
+                    <Edit className="h-4 w-4 mr-2" /> Edit Profile
+                  </Button>
+                )}
+                <Button variant="outline" size="icon">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="mr-6">
-              <div className="font-semibold">{posts?.length || 0}</div>
-              <div className="text-sm text-neutral-500">Posts</div>
-            </div>
-            <div>
-              <div className="font-semibold">12</div>
-              <div className="text-sm text-neutral-500">Leagues</div>
+            
+            {/* Stats bar */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-neutral-200">
+              <div className="text-center bg-neutral-50 rounded-lg p-3 hover:shadow-md transition-shadow">
+                <p className="text-2xl font-bold text-primary">856</p>
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">Connections</p>
+              </div>
+              <div className="text-center bg-neutral-50 rounded-lg p-3 hover:shadow-md transition-shadow">
+                <p className="text-2xl font-bold text-primary">{posts?.length || 0}</p>
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">Posts</p>
+              </div>
+              <div className="text-center bg-neutral-50 rounded-lg p-3 hover:shadow-md transition-shadow">
+                <p className="text-2xl font-bold text-primary">12</p>
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">Leagues</p>
+              </div>
+              <div className="text-center bg-neutral-50 rounded-lg p-3 hover:shadow-md transition-shadow">
+                <p className="text-2xl font-bold text-primary">7.2</p>
+                <p className="text-xs text-neutral-500 uppercase tracking-wider">Avg. Stats</p>
+              </div>
             </div>
           </div>
         </div>
