@@ -1,10 +1,15 @@
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Post from "@/components/Feed/Post";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import CreatePost from "@/components/Feed/CreatePost";
 import { 
   UserPlus, 
   MessageSquare, 
@@ -14,7 +19,22 @@ import {
   CalendarDays, 
   Trophy, 
   Users,
-  Activity 
+  Activity,
+  ChartBar,
+  Medal,
+  LineChart,
+  Star,
+  TrendingUp,
+  Dumbbell,
+  Timer,
+  Plus,
+  Award,
+  Clock,
+  Target,
+  Heart,
+  MoveUp,
+  BarChart3,
+  GanttChart
 } from "lucide-react";
 
 export default function Profile() {
@@ -164,46 +184,120 @@ export default function Profile() {
           </Card>
           
           {/* Achievements card */}
-          <Card>
-            <CardHeader>
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg">Achievements</CardTitle>
+              {isOwnProfile && (
+                <Button variant="ghost" size="sm">
+                  + Add New
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                  <Trophy className="h-4 w-4 text-primary" />
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center mr-3 shadow-md">
+                  <Trophy className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm">League Champion</h4>
-                  <p className="text-xs text-neutral-500">NBA Finals 2022</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
-                  <Trophy className="h-4 w-4 text-amber-600" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-sm">MVP Award</h4>
-                  <p className="text-xs text-neutral-500">All-Star Game 2021</p>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold text-sm">League Champion</h4>
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/20" variant="secondary">2023</Badge>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-1">NBA Finals MVP with record-breaking performance</p>
                 </div>
               </div>
               
               <div className="flex items-start">
-                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                  <Activity className="h-4 w-4 text-blue-600" />
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mr-3 shadow-md">
+                  <Medal className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm">Most Improved Player</h4>
-                  <p className="text-xs text-neutral-500">2020 Season</p>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold text-sm">MVP Award</h4>
+                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200" variant="secondary">2022</Badge>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-1">All-Star Game MVP with 42 points</p>
                 </div>
               </div>
               
-              {isOwnProfile && (
-                <Button variant="outline" className="w-full mt-2">
-                  Add Achievement
-                </Button>
-              )}
+              <div className="flex items-start">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mr-3 shadow-md">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold text-sm">Most Improved Player</h4>
+                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200" variant="secondary">2021</Badge>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-1">Increased scoring average by 12.4 points</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center mr-3 shadow-md">
+                  <Star className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold text-sm">All-NBA First Team</h4>
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200" variant="secondary">2020</Badge>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-1">Led league in assists and steals</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Performance Stats Card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Performance Stats</CardTitle>
+              <CardDescription>Current season highlights</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <LineChart className="h-4 w-4 text-primary mr-2" />
+                    <span className="text-sm font-medium">Points Per Game</span>
+                  </div>
+                  <span className="font-bold text-lg">24.8</span>
+                </div>
+                <Progress value={78} className="h-2" />
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <Activity className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm font-medium">Field Goal %</span>
+                  </div>
+                  <span className="font-bold text-lg">47.3%</span>
+                </div>
+                <Progress value={63} className="h-2 bg-green-100" />
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <Timer className="h-4 w-4 text-blue-500 mr-2" />
+                    <span className="text-sm font-medium">Minutes Per Game</span>
+                  </div>
+                  <span className="font-bold text-lg">33.2</span>
+                </div>
+                <Progress value={88} className="h-2 bg-blue-100" />
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <Dumbbell className="h-4 w-4 text-amber-500 mr-2" />
+                    <span className="text-sm font-medium">Rebounds</span>
+                  </div>
+                  <span className="font-bold text-lg">8.2</span>
+                </div>
+                <Progress value={55} className="h-2 bg-amber-100" />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -217,6 +311,9 @@ export default function Profile() {
               </TabsTrigger>
               <TabsTrigger value="media" className="flex-1">
                 <MessageSquare className="h-4 w-4 mr-2" /> Media
+              </TabsTrigger>
+              <TabsTrigger value="performance" className="flex-1">
+                <ChartBar className="h-4 w-4 mr-2" /> Performance
               </TabsTrigger>
               <TabsTrigger value="connections" className="flex-1">
                 <Users className="h-4 w-4 mr-2" /> Connections
@@ -278,6 +375,144 @@ export default function Profile() {
                   </p>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="performance">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Career Statistics Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Career Statistics</CardTitle>
+                    <CardDescription>Overall career performance</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Award className="h-4 w-4 text-orange-500 mr-2" />
+                          <span className="text-sm font-medium">Games Played</span>
+                        </div>
+                        <span className="font-semibold">342</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 text-blue-500 mr-2" />
+                          <span className="text-sm font-medium">Average Minutes</span>
+                        </div>
+                        <span className="font-semibold">31.7 MPG</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Target className="h-4 w-4 text-red-500 mr-2" />
+                          <span className="text-sm font-medium">Field Goal %</span>
+                        </div>
+                        <span className="font-semibold">45.2%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <BarChart3 className="h-4 w-4 text-purple-500 mr-2" />
+                          <span className="text-sm font-medium">Career PPG</span>
+                        </div>
+                        <span className="font-semibold">21.4</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Heart className="h-4 w-4 text-pink-500 mr-2" />
+                          <span className="text-sm font-medium">Free Throw %</span>
+                        </div>
+                        <span className="font-semibold">86.3%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <MoveUp className="h-4 w-4 text-green-500 mr-2" />
+                          <span className="text-sm font-medium">Assists Per Game</span>
+                        </div>
+                        <span className="font-semibold">7.2</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Recent Games Performance Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Last 5 Games</CardTitle>
+                    <CardDescription>Most recent performance</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 p-0">
+                    <div className="overflow-hidden">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-neutral-50 border-b border-neutral-200">
+                            <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500">DATE</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500">VS</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-neutral-500">PTS</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-neutral-500">REB</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-neutral-500">AST</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-neutral-200">
+                            <td className="px-4 py-3 text-xs text-neutral-700">Apr 12</td>
+                            <td className="px-4 py-3 text-xs font-medium">@LAL</td>
+                            <td className="px-4 py-3 text-xs text-center font-medium text-primary">32</td>
+                            <td className="px-4 py-3 text-xs text-center">8</td>
+                            <td className="px-4 py-3 text-xs text-center">10</td>
+                          </tr>
+                          <tr className="border-b border-neutral-200">
+                            <td className="px-4 py-3 text-xs text-neutral-700">Apr 10</td>
+                            <td className="px-4 py-3 text-xs font-medium">CHI</td>
+                            <td className="px-4 py-3 text-xs text-center font-medium text-primary">28</td>
+                            <td className="px-4 py-3 text-xs text-center">5</td>
+                            <td className="px-4 py-3 text-xs text-center">7</td>
+                          </tr>
+                          <tr className="border-b border-neutral-200">
+                            <td className="px-4 py-3 text-xs text-neutral-700">Apr 8</td>
+                            <td className="px-4 py-3 text-xs font-medium">@BOS</td>
+                            <td className="px-4 py-3 text-xs text-center font-medium text-primary">19</td>
+                            <td className="px-4 py-3 text-xs text-center">11</td>
+                            <td className="px-4 py-3 text-xs text-center">5</td>
+                          </tr>
+                          <tr className="border-b border-neutral-200">
+                            <td className="px-4 py-3 text-xs text-neutral-700">Apr 6</td>
+                            <td className="px-4 py-3 text-xs font-medium">PHI</td>
+                            <td className="px-4 py-3 text-xs text-center font-medium text-primary">24</td>
+                            <td className="px-4 py-3 text-xs text-center">6</td>
+                            <td className="px-4 py-3 text-xs text-center">9</td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-3 text-xs text-neutral-700">Apr 4</td>
+                            <td className="px-4 py-3 text-xs font-medium">@MIA</td>
+                            <td className="px-4 py-3 text-xs text-center font-medium text-primary">21</td>
+                            <td className="px-4 py-3 text-xs text-center">9</td>
+                            <td className="px-4 py-3 text-xs text-center">5</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Yearly Performance Chart */}
+                <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Season Performance</CardTitle>
+                    <CardDescription>Year-to-year statistics</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center py-10">
+                      <GanttChart className="h-14 w-14 mx-auto text-neutral-300" />
+                      <h3 className="mt-2 font-medium">Interactive charts will be here</h3>
+                      <p className="text-neutral-400 text-sm mt-1 max-w-md mx-auto">
+                        View detailed performance statistics and trends over time
+                      </p>
+                      {isOwnProfile && (
+                        <Button className="mt-4" variant="outline">Import Stats</Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
             
             <TabsContent value="connections">
