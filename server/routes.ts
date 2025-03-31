@@ -431,7 +431,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const newComment = await storage.createComment(commentData);
-      return res.status(201).json(newComment);
+      
+      // Include user info in the response
+      const { password, ...userWithoutPassword } = user;
+      
+      return res.status(201).json({
+        ...newComment,
+        user: userWithoutPassword
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors });
