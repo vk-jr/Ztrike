@@ -14,6 +14,7 @@ import Messages from "@/pages/Messages";
 import Notifications from "@/pages/Notifications";
 import CreateAccount from "@/pages/CreateAccount";
 import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +30,13 @@ function Router() {
       <Route path="/notifications" component={Notifications} />
       <Route path="/create-account" component={CreateAccount} />
       <Route path="/profile/:id" component={Profile} />
+      <Route path="/settings" component={Settings} />
+      <Route path="/settings/appearance" component={Settings} />
+      <Route path="/settings/profile" component={Settings} />
+      <Route path="/settings/privacy" component={Settings} />
+      <Route path="/settings/notifications" component={Settings} />
+      <Route path="/settings/accessibility" component={Settings} />
+      <Route path="/settings/language" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

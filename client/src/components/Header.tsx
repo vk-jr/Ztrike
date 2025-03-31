@@ -9,8 +9,22 @@ import {
   Search,
   ChevronDown,
   Volleyball,
-  UsersRound
+  UsersRound,
+  Settings,
+  LogOut,
+  User,
+  HelpCircle,
+  Moon,
+  Sun,
+  Palette
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const [location] = useLocation();
@@ -114,19 +128,62 @@ export default function Header() {
             </button>
             
             <div className="flex items-center border-l pl-3 ml-3">
-              {/* Change button to Link and point to Profile page with ID=1 */}
-              <Link 
-                href="/profile/1" 
-                className="flex items-center text-sm focus:outline-none hover:opacity-80 transition-opacity"
-              >
-                <img 
-                  className="h-8 w-8 rounded-full object-cover border-2 border-primary/30" 
-                  src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80&w=100&h=100" 
-                  alt="User profile"
-                />
-                <span className="hidden lg:block ml-2 font-medium text-neutral-700">Michael J.</span>
-                <ChevronDown className="ml-1 h-4 w-4 text-neutral-400" />
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center text-sm focus:outline-none hover:opacity-80 transition-opacity">
+                    <img 
+                      className="h-8 w-8 rounded-full object-cover border-2 border-primary/30" 
+                      src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80&w=100&h=100" 
+                      alt="User profile"
+                    />
+                    <span className="hidden lg:block ml-2 font-medium text-neutral-700">Michael J.</span>
+                    <ChevronDown className="ml-1 h-4 w-4 text-neutral-400" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex items-center justify-start p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <p className="font-medium">Michael Johnson</p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        @michaeljohnson
+                      </p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile/1" className="cursor-pointer flex w-full items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer flex w-full items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/appearance" className="cursor-pointer flex w-full items-center">
+                      <Palette className="mr-2 h-4 w-4" />
+                      <span>Theme</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/help" className="cursor-pointer flex w-full items-center">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      <span>Help & Support</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/logout" className="cursor-pointer flex w-full items-center text-red-500">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
