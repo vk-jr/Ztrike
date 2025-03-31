@@ -259,9 +259,41 @@ export class MemStorage implements IStorage {
       mediaUrl: "https://images.unsplash.com/photo-1518113883665-a043e23f2a15?auto=format&fit=crop&q=80&w=1200&h=675",
       mediaType: "video"
     };
+    
+    const post3: InsertPost = {
+      userId: 1, // Michael Johnson
+      content: "Just set a new personal record for my 400m sprint! Hard work and consistency paying off. Excited to see what's next in my journey. #running #athletics #personalbest",
+      mediaUrl: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&q=80&w=1200&h=675",
+      mediaType: "image"
+    };
+    
+    const post4: InsertPost = {
+      userId: 2, // Serena Williams
+      content: "Post-match recovery is just as important as the training. Taking time to recharge and reflect on today's performance. #recovery #tennis #wellness",
+      mediaUrl: "https://images.unsplash.com/photo-1530915568254-9f44983691f8?auto=format&fit=crop&q=80&w=1200&h=675",
+      mediaType: "image"
+    };
+    
+    const post5: InsertPost = {
+      userId: 3, // Lebron James
+      content: "Community outreach day with the team. Giving back to the kids who support us means everything. Inspiring the next generation! #community #giving #basketball",
+      mediaUrl: "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=1200&h=675",
+      mediaType: "image"
+    };
+    
+    const post6: InsertPost = {
+      userId: 1, // Michael Johnson
+      content: "Pre-season training camp starts today! Looking forward to pushing boundaries with my teammates. This season is going to be special. #preseason #training #dedication",
+      mediaUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&q=80&w=1200&h=675",
+      mediaType: "video"
+    };
 
     this.createPost(post1);
     this.createPost(post2);
+    this.createPost(post3);
+    this.createPost(post4);
+    this.createPost(post5);
+    this.createPost(post6);
 
     // Create sample subscriptions
     const sub1: InsertSubscription = {

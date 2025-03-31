@@ -104,24 +104,20 @@ export default function Header() {
             </button>
             
             <div className="flex items-center border-l pl-3 ml-3">
-              <button className="flex items-center text-sm focus:outline-none">
+              {/* Change button to Link and point to Profile page with ID=1 */}
+              <Link 
+                href="/profile/1" 
+                className="flex items-center text-sm focus:outline-none hover:opacity-80 transition-opacity"
+              >
                 <img 
-                  className="h-8 w-8 rounded-full object-cover" 
+                  className="h-8 w-8 rounded-full object-cover border-2 border-primary/30" 
                   src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&q=80&w=100&h=100" 
                   alt="User profile"
                 />
-                <span className="hidden lg:block ml-2 font-medium text-neutral-400">Michael J.</span>
+                <span className="hidden lg:block ml-2 font-medium text-neutral-700">Michael J.</span>
                 <ChevronDown className="ml-1 h-4 w-4 text-neutral-400" />
-              </button>
+              </Link>
             </div>
-            
-            {/* Create Account / Sign Up */}
-            <Link 
-              href="/create-account" 
-              className="ml-4 px-4 py-2 rounded-full border border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors duration-300 hidden lg:block"
-            >
-              Create Account
-            </Link>
           </div>
         </div>
       </div>

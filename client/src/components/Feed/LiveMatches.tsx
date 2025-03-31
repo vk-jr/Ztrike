@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -108,9 +109,12 @@ export default function LiveMatches() {
           <p className="text-white/80 text-sm mt-1">Watch your favorite teams compete in real-time</p>
         </div>
         <div className="flex-shrink-0">
-          <button className="px-4 py-1 bg-white text-primary rounded-full text-sm font-medium hover:bg-white/90 transition-colors">
-            View All
-          </button>
+          <Link
+            href="/leagues"
+            className="px-4 py-1 bg-white text-primary rounded-full text-sm font-medium hover:bg-white/90 transition-colors inline-block"
+          >
+            View All Matches
+          </Link>
         </div>
       </div>
       

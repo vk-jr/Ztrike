@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'framer-motion';
 
-const geoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json";
+// Updated to a more reliable source
+const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 interface League {
   id: number;
@@ -118,59 +120,118 @@ export default function WorldMap({ leagues, selectedSport, onSelectLeague }: Wor
     );
   }
 
+  // Get sport-specific marker color
+  const getSportColor = (sport: string) => {
+    const colorMap: Record<string, string> = {
+      'Basketball': '#FF5533',
+      'Football': '#3369FF',
+      'Baseball': '#33C4FF',
+      'Hockey': '#9333FF',
+      'Tennis': '#33FF57',
+      'Golf': '#FFD333',
+    };
+    
+    return colorMap[sport] || '#FF5533';
+  };
+  
+  const [position, setPosition] = useState({ coordinates: [0, 0], zoom: 1 });
+  
+  const handleMoveEnd = (position: any) => {
+    setPosition(position);
+  };
+  
   return (
     <Card className="mt-6 overflow-hidden">
       <CardContent className="p-0" ref={mapRef}>
         <div className="relative" style={{ height: `${dimensions.height}px` }}>
-          <ComposableMap projection="geoMercator" style={{ width: '100%', height: '100%' }}>
-            <Geographies geography={geoUrl}>
-              {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="#EAEAEC"
-                    stroke="#D6D6DA"
-                    style={{
-                      default: { outline: 'none' },
-                      hover: { fill: '#F5F5F5', outline: 'none' },
-                      pressed: { outline: 'none' },
-                    }}
-                  />
-                ))
-              }
-            </Geographies>
-            
-            {leaguesWithLocations.map((league) => (
-              <Marker 
-                key={league.id} 
-                coordinates={[league.location!.lng, league.location!.lat]}
-                onClick={() => onSelectLeague(league.id)}
-              >
-                <circle
-                  r={10}
-                  fill="#FF5533"
-                  stroke="#FFFFFF"
-                  strokeWidth={2}
-                  cursor="pointer"
-                />
-                <text
-                  textAnchor="middle"
-                  y={-15}
-                  style={{ 
-                    fontFamily: "system-ui",
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                    fill: "#333",
-                    pointerEvents: "none",
-                    textShadow: "1px 1px 0 white, -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white"
-                  }}
+          <ComposableMap 
+            projection="geoMercator" 
+            style={{ width: '100%', height: '100%' }}
+          >
+            <ZoomableGroup
+              zoom={position.zoom}
+              center={position.coordinates as [number, number]}
+              onMoveEnd={handleMoveEnd}
+              minZoom={1}
+              maxZoom={5}
+            >
+              <Geographies geography={geoUrl}>
+                {({ geographies }) =>
+                  geographies.map((geo) => (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      fill="#EAEAEC"
+                      stroke="#D6D6DA"
+                      style={{
+                        default: { outline: 'none' },
+                        hover: { fill: '#F5F5F5', outline: 'none' },
+                        pressed: { outline: 'none' },
+                      }}
+                    />
+                  ))
+                }
+              </Geographies>
+              
+              {leaguesWithLocations.map((league) => (
+                <Marker 
+                  key={league.id} 
+                  coordinates={[league.location!.lng, league.location!.lat]}
+                  onClick={() => onSelectLeague(league.id)}
                 >
-                  {league.name}
-                </text>
-              </Marker>
-            ))}
+                  <motion.circle
+                    r={8}
+                    fill={getSportColor(league.sport)}
+                    stroke="#FFFFFF"
+                    strokeWidth={2}
+                    cursor="pointer"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: league.id * 0.1 }}
+                    whileHover={{ scale: 1.2 }}
+                  />
+                  <motion.text
+                    textAnchor="middle"
+                    y={-15}
+                    style={{ 
+                      fontFamily: "system-ui",
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      fill: "#333",
+                      pointerEvents: "none",
+                      textShadow: "1px 1px 0 white, -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white"
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: league.id * 0.1 + 0.2 }}
+                  >
+                    {league.name}
+                  </motion.text>
+                </Marker>
+              ))}
+            </ZoomableGroup>
           </ComposableMap>
+          
+          <div className="absolute bottom-4 right-4 bg-white p-2 rounded-lg shadow-md flex gap-2">
+            <button 
+              onClick={() => setPosition(prev => ({...prev, zoom: Math.min(prev.zoom + 0.5, 5)}))}
+              className="text-lg w-8 h-8 flex items-center justify-center bg-neutral-100 rounded hover:bg-neutral-200"
+            >
+              +
+            </button>
+            <button 
+              onClick={() => setPosition(prev => ({...prev, zoom: Math.max(prev.zoom - 0.5, 1)}))}
+              className="text-lg w-8 h-8 flex items-center justify-center bg-neutral-100 rounded hover:bg-neutral-200"
+            >
+              -
+            </button>
+            <button 
+              onClick={() => setPosition({ coordinates: [0, 0], zoom: 1 })}
+              className="text-sm px-2 flex items-center justify-center bg-neutral-100 rounded hover:bg-neutral-200"
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </CardContent>
     </Card>

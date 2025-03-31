@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ThumbsUp, MessageSquare, Share2, MoreHorizontal, Heart } from "lucide-react";
+import { ThumbsUp, MessageSquare, Share2, MoreHorizontal, Heart, X, Flag, Bookmark, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PostProps {
   post: any;
@@ -14,6 +20,9 @@ interface PostProps {
 export default function Post({ post, currentUserId }: PostProps) {
   const [isLiked, setIsLiked] = useState(post.likedByUser);
   const [likeCount, setLikeCount] = useState(post.likeCount || 0);
+  const [showComments, setShowComments] = useState(false);
+  const [comment, setComment] = useState("");
+  const [isPostSaved, setIsPostSaved] = useState(false);
   
   const queryClient = useQueryClient();
   
@@ -26,7 +35,7 @@ export default function Post({ post, currentUserId }: PostProps) {
     },
     onSuccess: () => {
       setIsLiked(true);
-      setLikeCount(prev => prev + 1);
+      setLikeCount((prev: number) => prev + 1);
       queryClient.invalidateQueries({ queryKey: [`/api/feed?userId=${currentUserId}`] });
     }
   });
@@ -35,6 +44,21 @@ export default function Post({ post, currentUserId }: PostProps) {
     if (!isLiked) {
       likeMutation.mutate();
     }
+  };
+  
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (comment.trim()) {
+      // In a real app, we would submit the comment to the server
+      setComment("");
+      // For now, we'll just show a simulated success
+      alert("Comment submitted! This would be saved to the database in a real app.");
+    }
+  };
+  
+  const toggleSavePost = () => {
+    setIsPostSaved(!isPostSaved);
+    // In a real app, we would save the post to the user's saved posts
   };
 
   if (!post || !post.user) {
@@ -86,9 +110,31 @@ export default function Post({ post, currentUserId }: PostProps) {
               <span>{formatPostDate(post.createdAt)}</span>
             </div>
           </div>
-          <button className="ml-auto text-neutral-400 hover:text-neutral-500">
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="ml-auto text-neutral-400 hover:text-neutral-500">
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={toggleSavePost} className="cursor-pointer">
+                <Bookmark className="h-4 w-4 mr-2" />
+                {isPostSaved ? "Unsave post" : "Save post"}
+              </DropdownMenuItem>
+              {post.userId === currentUserId && (
+                <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete post
+                </DropdownMenuItem>
+              )}
+              {post.userId !== currentUserId && (
+                <DropdownMenuItem className="cursor-pointer text-amber-500 focus:text-amber-500">
+                  <Flag className="h-4 w-4 mr-2" />
+                  Report post
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         <div className="mt-3">
@@ -159,7 +205,10 @@ export default function Post({ post, currentUserId }: PostProps) {
           <ThumbsUp className="h-5 w-5 mr-1" />
           <span>Like</span>
         </button>
-        <button className="flex-1 flex items-center justify-center text-neutral-400 hover:text-primary transition-colors py-1 text-sm font-medium">
+        <button 
+          onClick={() => setShowComments(!showComments)}
+          className={`flex-1 flex items-center justify-center py-1 text-sm font-medium ${showComments ? 'text-primary' : 'text-neutral-400 hover:text-primary'} transition-colors`}
+        >
           <MessageSquare className="h-5 w-5 mr-1" />
           <span>Comment</span>
         </button>
@@ -168,6 +217,70 @@ export default function Post({ post, currentUserId }: PostProps) {
           <span>Share</span>
         </button>
       </div>
+      
+      {/* Comments Section */}
+      {showComments && (
+        <div className="border-t border-neutral-100 p-4">
+          {/* Comment Input */}
+          <form onSubmit={handleCommentSubmit} className="flex items-start mb-4">
+            <img 
+              src={post.currentUserAvatar || "https://via.placeholder.com/40"} 
+              alt="Your avatar" 
+              className="w-8 h-8 rounded-full mr-2 flex-shrink-0 object-cover" 
+            />
+            <div className="flex-1 bg-neutral-50 rounded-2xl overflow-hidden flex items-center">
+              <input
+                type="text"
+                placeholder="Write a comment..."
+                className="flex-1 py-2 px-3 bg-transparent text-sm focus:outline-none"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+              <button 
+                type="submit" 
+                disabled={!comment.trim()}
+                className="bg-primary text-white rounded-full p-1 mr-2 disabled:opacity-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </form>
+          
+          {/* Comments List */}
+          {post.comments && post.comments.length > 0 ? (
+            <div className="space-y-3">
+              {post.comments.map((comment: any) => (
+                <div key={comment.id} className="flex items-start">
+                  <img 
+                    src={comment.user.avatar || "https://via.placeholder.com/40"} 
+                    alt={comment.user.fullName} 
+                    className="w-8 h-8 rounded-full mr-2 flex-shrink-0 object-cover" 
+                  />
+                  <div>
+                    <div className="bg-neutral-50 inline-block py-2 px-3 rounded-2xl text-sm">
+                      <a href={`/profile/${comment.user.id}`} className="font-medium text-neutral-900 mr-1">
+                        {comment.user.fullName}
+                      </a>
+                      {comment.content}
+                    </div>
+                    <div className="flex items-center space-x-3 mt-1 text-xs text-neutral-500 pl-3">
+                      <button className="hover:text-neutral-900">Like</button>
+                      <button className="hover:text-neutral-900">Reply</button>
+                      <span>{formatPostDate(comment.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-neutral-400 text-sm py-2">
+              No comments yet. Be the first to comment!
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
