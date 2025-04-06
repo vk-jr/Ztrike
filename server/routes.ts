@@ -83,32 +83,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rememberMe: z.boolean().optional(),
       });
       
-      const { email, password } = loginSchema.parse(req.body);
+      const { email, password, rememberMe } = loginSchema.parse(req.body);
+      
+      console.log(`[Login] Attempting login for email: ${email}`);
       
       // Find user by email
       const user = await storage.getUserByEmail(email);
       if (!user) {
+        console.log(`[Login] User not found for email: ${email}`);
         return res.status(401).json({ message: "Invalid email or password" });
       }
+      
+      console.log(`[Login] Found user: ${user.username} (ID: ${user.id})`);
       
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
+        console.log(`[Login] Invalid password for user: ${user.username}`);
         return res.status(401).json({ message: "Invalid email or password" });
       }
       
       // Set session
       req.session.userId = user.id;
+      if (rememberMe) {
+        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+      } else {
+        req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 1 day
+      }
+      console.log(`[Login] Set session userId to: ${user.id}`);
       
       // Update last login time
-      await storage.updateUserLastLogin(user.id);
+      const updatedUser = await storage.updateUserLastLogin(user.id);
+      
+      // Get the most up-to-date user data to ensure all profile details are included
+      const fullUserData = updatedUser || user;
       
       // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
+      const { password: _, ...userWithoutPassword } = fullUserData;
+      
+      // Ensure all profile fields are included in the response
+      const userProfile = {
+        ...userWithoutPassword,
+        // Ensure these fields are always defined, even if null
+        avatar: userWithoutPassword.avatar || null,
+        sport: userWithoutPassword.sport || null,
+        position: userWithoutPassword.position || null,
+        team: userWithoutPassword.team || null,
+        bio: userWithoutPassword.bio || null,
+      };
+      
+      console.log(`[Login] Login successful for user: ${user.username} (ID: ${user.id})`);
       
       res.status(200).json({ 
         message: "Login successful",
-        user: userWithoutPassword
+        user: userProfile
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -141,7 +169,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove password from response
       const { password, ...userWithoutPassword } = user;
       
-      res.status(200).json({ user: userWithoutPassword });
+      // Ensure all profile fields are included in the response
+      const userProfile = {
+        ...userWithoutPassword,
+        // Ensure these fields are always defined, even if null
+        avatar: userWithoutPassword.avatar || null,
+        sport: userWithoutPassword.sport || null,
+        position: userWithoutPassword.position || null,
+        team: userWithoutPassword.team || null,
+        bio: userWithoutPassword.bio || null,
+      };
+      
+      res.status(200).json({ user: userProfile });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user data" });
     }
@@ -194,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.get("/api/users/:id", async (req, res) => {
     const userId = parseInt(req.params.id);
-    if (isNaN(userId)) {
+    if (isNaN(userId) || userId <= 0) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
     

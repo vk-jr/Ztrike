@@ -19,6 +19,8 @@ import {
   Check,
   Clock
 } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "@/App";
 
 export default function Messages() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,8 +29,9 @@ export default function Messages() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Mock user ID - in a real app, this would come from authentication
-  const userId = 1;
+  // Get user ID from AuthContext instead of hardcoded value
+  const { user: currentUser } = useContext(AuthContext);
+  const userId = currentUser?.id || 0;
 
   const { data: messages, isLoading: isLoadingMessages } = useQuery({
     queryKey: [`/api/messages?userId=${userId}`],
@@ -126,25 +129,25 @@ export default function Messages() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-14rem)] bg-white rounded-lg shadow-md border border-blue-100 overflow-hidden">
         {/* Contacts List */}
         <div className="lg:col-span-1">
-          <Card className="h-full flex flex-col">
-            <CardHeader className="pb-2">
+          <Card className="h-full flex flex-col border-blue-100">
+            <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-blue-100">
               <CardTitle className="text-lg flex items-center justify-between">
                 <div className="flex items-center">
                   <MessageSquare className="h-5 w-5 mr-2 text-primary" /> Messages
                 </div>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" className="hover:bg-blue-50 hover:text-primary border-blue-200">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </CardTitle>
               <div className="relative mt-2">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 h-4 w-4" />
                 <Input
                   placeholder="Search messages..."
-                  className="pl-10"
+                  className="pl-10 border-blue-200 focus:border-primary/50 focus:ring-primary/50"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -172,7 +175,7 @@ export default function Messages() {
                   return (
                     <div 
                       key={contact.id} 
-                      className={`p-3 border-b border-neutral-200 last:border-0 hover:bg-neutral-50 cursor-pointer ${activeContactId === contact.id ? 'bg-neutral-50' : ''} ${isUnread ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
+                      className={`p-3 border-b border-blue-100 last:border-0 hover:bg-blue-50/30 cursor-pointer transition-colors ${activeContactId === contact.id ? 'bg-blue-50/50 border-l-4 border-l-primary' : ''} ${isUnread ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
                       onClick={() => setActiveContactId(contact.id)}
                     >
                       <div className="flex items-center">
@@ -180,23 +183,23 @@ export default function Messages() {
                           <img 
                             src={contact.avatar} 
                             alt={contact.fullName} 
-                            className="h-12 w-12 rounded-full object-cover"
+                            className="h-12 w-12 rounded-full object-cover ring-2 ring-blue-100 shadow-sm"
                           />
                           <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
                         </div>
                         <div className="ml-3 flex-1 min-w-0">
                           <div className="flex justify-between items-center">
-                            <h4 className={`font-medium truncate ${isUnread ? 'font-semibold' : ''}`}>{contact.fullName}</h4>
-                            <span className="text-xs text-neutral-400 whitespace-nowrap ml-2">
+                            <h4 className={`font-medium truncate ${isUnread ? 'font-semibold text-blue-800' : 'text-blue-700'}`}>{contact.fullName}</h4>
+                            <span className="text-xs text-blue-400 whitespace-nowrap ml-2 bg-blue-50 px-1.5 py-0.5 rounded-full">
                               {lastMessage && getMessageTime(lastMessage.createdAt)}
                             </span>
                           </div>
-                          <p className={`text-sm truncate ${isUnread ? 'text-neutral-700 font-medium' : 'text-neutral-400'}`}>
+                          <p className={`text-sm truncate ${isUnread ? 'text-blue-700 font-medium' : 'text-blue-400'}`}>
                             {lastMessage?.content || "No messages yet"}
                           </p>
                         </div>
                         {isUnread && (
-                          <span className="w-2 h-2 rounded-full bg-primary ml-2"></span>
+                          <span className="w-3 h-3 rounded-full bg-primary ml-2 animate-pulse"></span>
                         )}
                       </div>
                     </div>
@@ -204,9 +207,11 @@ export default function Messages() {
                 })
               ) : (
                 <div className="py-6 text-center h-full flex flex-col justify-center">
-                  <MessageSquare className="h-12 w-12 mx-auto text-neutral-300" />
-                  <h3 className="mt-2 font-medium">No messages</h3>
-                  <p className="text-sm text-neutral-400 mt-1 px-4">
+                  <div className="bg-blue-50 p-6 rounded-full mx-auto">
+                    <MessageSquare className="h-12 w-12 text-blue-300" />
+                  </div>
+                  <h3 className="mt-4 font-medium text-blue-700">No messages</h3>
+                  <p className="text-sm text-blue-400 mt-2 px-4 max-w-xs mx-auto">
                     {searchQuery ? `No conversations matching "${searchQuery}"` : "Start connecting with other athletes to message them"}
                   </p>
                 </div>
@@ -221,27 +226,30 @@ export default function Messages() {
             {activeContactId && activeContact ? (
               <>
                 {/* Chat Header */}
-                <CardHeader className="py-3 border-b">
+                <CardHeader className="py-3 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100/50">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <img 
                         src={activeContact.avatar} 
                         alt={activeContact.fullName} 
-                        className="h-10 w-10 rounded-full object-cover"
+                        className="h-10 w-10 rounded-full object-cover ring-2 ring-blue-200 shadow-sm"
                       />
                       <div className="ml-3 flex-1">
-                        <h4 className="font-medium">{activeContact.fullName}</h4>
-                        <p className="text-xs text-green-500">Online</p>
+                        <h4 className="font-medium text-blue-800">{activeContact.fullName}</h4>
+                        <p className="text-xs flex items-center">
+                          <span className="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
+                          <span className="text-green-600 font-medium">Online</span>
+                        </p>
                       </div>
                     </div>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" className="border-blue-200 hover:bg-blue-50 hover:text-primary transition-colors">
                         <Phone className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" className="border-blue-200 hover:bg-blue-50 hover:text-primary transition-colors">
                         <Video className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" className="border-blue-200 hover:bg-blue-50 hover:text-primary transition-colors">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </div>
@@ -270,7 +278,7 @@ export default function Messages() {
                           <div key={message.id}>
                             {showDate && (
                               <div className="text-center my-4">
-                                <span className="px-4 py-1 bg-neutral-100 rounded-full text-neutral-500 text-xs">
+                                <span className="px-4 py-1 bg-blue-100/50 rounded-full text-blue-600 text-xs font-medium shadow-sm border border-blue-100">
                                   {getMessageDate(message.createdAt)}
                                 </span>
                               </div>
@@ -284,14 +292,14 @@ export default function Messages() {
                                 />
                               )}
                               <div 
-                                className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                                className={`max-w-[80%] rounded-lg px-4 py-2.5 shadow-sm ${
                                   isMyMessage 
-                                    ? 'bg-primary text-white rounded-tr-none' 
-                                    : 'bg-neutral-100 rounded-tl-none'
+                                    ? 'bg-gradient-to-r from-primary to-blue-500 text-white rounded-tr-none' 
+                                    : 'bg-blue-50 text-blue-800 rounded-tl-none border border-blue-100'
                                 }`}
                               >
-                                <p>{message.content}</p>
-                                <div className={`text-xs mt-1 flex items-center ${isMyMessage ? 'text-white/70 justify-end' : 'text-neutral-400'}`}>
+                                <p className="leading-relaxed">{message.content}</p>
+                                <div className={`text-xs mt-1.5 flex items-center ${isMyMessage ? 'text-white/80 justify-end' : 'text-blue-400 justify-start'}`}>
                                   {getMessageTime(message.createdAt)}
                                   {isMyMessage && (
                                     <Check className="h-3 w-3 ml-1" />
@@ -315,11 +323,11 @@ export default function Messages() {
                 </div>
                 
                 {/* Message Input */}
-                <div className="p-3 border-t">
+                <div className="p-4 border-t border-blue-100 bg-gradient-to-r from-blue-50/50 to-white">
                   <div className="flex space-x-2">
                     <Textarea
                       placeholder={`Message ${activeContact.fullName}...`}
-                      className="min-h-[60px] resize-none"
+                      className="min-h-[60px] resize-none border-blue-200 focus:border-primary/50 focus:ring-primary/50 shadow-sm"
                       value={messageContent}
                       onChange={(e) => setMessageContent(e.target.value)}
                       onKeyDown={(e) => {
@@ -330,7 +338,7 @@ export default function Messages() {
                       }}
                     />
                     <Button 
-                      className="h-auto"
+                      className="h-auto bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-600 transition-all shadow-md"
                       onClick={handleSendMessage}
                       disabled={!messageContent.trim() || sendMessageMutation.isPending}
                     >
@@ -340,16 +348,19 @@ export default function Messages() {
                 </div>
               </>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                <div className="bg-neutral-100 p-6 rounded-full">
-                  <MessageSquare className="h-12 w-12 text-neutral-400" />
+              <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                <div className="bg-gradient-to-r from-blue-100 to-blue-50 p-8 rounded-full shadow-md">
+                  <MessageSquare className="h-14 w-14 text-primary" />
                 </div>
-                <h2 className="text-xl font-semibold mt-4">Your Messages</h2>
-                <p className="text-neutral-400 mt-2 max-w-md">
+                <h2 className="text-2xl font-semibold mt-6 text-blue-800">Your Messages</h2>
+                <p className="text-blue-500 mt-3 max-w-md">
                   Select a conversation from the list or start a new conversation by connecting with athletes
                 </p>
-                <Button className="mt-4" onClick={() => window.location.href = '/network'}>
-                  Find Connections <ChevronRight className="ml-1 h-4 w-4" />
+                <Button 
+                  className="mt-6 bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-600 transition-all shadow-md px-6 py-2 h-auto"
+                  onClick={() => window.location.href = '/network'}
+                >
+                  Find Connections <ChevronRight className="ml-1.5 h-4 w-4" />
                 </Button>
               </div>
             )}

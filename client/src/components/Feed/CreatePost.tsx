@@ -72,15 +72,23 @@ export default function CreatePost({ userId, userAvatar }: CreatePostProps) {
   };
 
   const handleAddMedia = (type: "image" | "video") => {
-    // In a real implementation, this would open a file picker or media gallery
-    // For this demo, we'll use sample URLs
-    if (type === "image") {
-      setMediaUrl("https://images.unsplash.com/photo-1595435742656-4e610d56d8e1?auto=format&fit=crop&q=80&w=1200&h=675");
-      setMediaType("image");
-    } else if (type === "video") {
-      setMediaUrl("https://images.unsplash.com/photo-1518113883665-a043e23f2a15?auto=format&fit=crop&q=80&w=1200&h=675");
-      setMediaType("video");
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = type === 'image' ? 'image/*' : 'video/*';
+    
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setMediaUrl(reader.result as string);
+          setMediaType(type);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    
+    input.click();
   };
 
   const clearMedia = () => {
@@ -89,10 +97,10 @@ export default function CreatePost({ userId, userAvatar }: CreatePostProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+    <div className="bg-white rounded-lg shadow-sm p-4 mb-4 card-blue">
       <div className="flex items-center">
         <img 
-          className="h-10 w-10 rounded-full object-cover" 
+          className="h-10 w-10 rounded-full object-cover border border-blue-100" 
           src={userAvatar}
           alt="User profile"
         />
@@ -100,64 +108,65 @@ export default function CreatePost({ userId, userAvatar }: CreatePostProps) {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <button 
-                className="w-full text-left px-4 py-2 bg-neutral-100 rounded-full text-neutral-400 text-sm hover:bg-neutral-200 transition-colors"
+                className="w-full text-left px-4 py-2 bg-blue-50 rounded-full text-blue-500 text-sm hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
               >
                 Share your training or match highlights...
               </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Create Post</DialogTitle>
+            <DialogContent className="sm:max-w-[500px] bg-white border border-blue-100 shadow-lg">
+              <DialogHeader className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-t-lg border-b border-blue-100">
+                <DialogTitle className="text-blue-600 font-semibold">Create Post</DialogTitle>
               </DialogHeader>
               
-              <div className="mt-4">
+              <div className="p-4">
                 <Textarea
                   placeholder="What's on your mind?"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[100px] resize-none p-3"
+                  className="min-h-[100px] resize-none p-4 rounded-lg border border-blue-200 focus:border-blue-400 focus:ring focus:ring-blue-100 transition-all"
                 />
                 
                 {mediaUrl && (
-                  <div className="relative mt-3 rounded-md overflow-hidden">
+                  <div className="relative mt-4 rounded-lg overflow-hidden border border-blue-100 shadow-sm">
                     {mediaType === "image" ? (
                       <img src={mediaUrl} alt="Post preview" className="w-full h-auto max-h-[300px] object-cover" />
                     ) : (
-                      <div className="w-full h-[200px] bg-neutral-800 flex items-center justify-center">
-                        <Video className="h-12 w-12 text-neutral-300" />
+                      <div className="w-full h-[200px] bg-blue-50 flex items-center justify-center">
+                        <Video className="h-12 w-12 text-blue-400" />
                       </div>
                     )}
                     <button 
                       onClick={clearMedia}
-                      className="absolute top-2 right-2 bg-black/60 text-white p-1 rounded-full hover:bg-black/80"
+                      className="absolute top-2 right-2 bg-blue-600/90 text-white p-1.5 rounded-full hover:bg-blue-700/90 transition-colors"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                 )}
                 
-                <div className="flex mt-4 justify-between">
-                  <div className="flex space-x-2">
+                <div className="flex mt-6 justify-between items-center">
+                  <div className="flex space-x-3">
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleAddMedia("image")}
-                      className="flex items-center"
+                      className="flex items-center bg-white border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-colors px-4"
                     >
-                      <Image className="h-4 w-4 mr-1" /> Photo
+                      <Image className="h-4 w-4 mr-2" /> Photo
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={() => handleAddMedia("video")}
-                      className="flex items-center"
+                      className="flex items-center bg-white border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-colors px-4"
                     >
-                      <Video className="h-4 w-4 mr-1" /> Video
+                      <Video className="h-4 w-4 mr-2" /> Video
                     </Button>
                   </div>
                   <Button 
                     onClick={handleCreatePost} 
                     disabled={createPostMutation.isPending || !content.trim()}
+                    className="bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 px-6 py-2 rounded-lg transition-colors"
                   >
                     {createPostMutation.isPending ? "Posting..." : "Post"}
                   </Button>
@@ -168,40 +177,40 @@ export default function CreatePost({ userId, userAvatar }: CreatePostProps) {
         </div>
       </div>
       
-      <div className="flex mt-3 pt-2 border-t border-neutral-200">
+      <div className="flex mt-3 pt-2 border-t border-blue-100">
         <button 
           onClick={() => {
             setIsDialogOpen(true);
             setTimeout(() => handleAddMedia("image"), 100);
           }}
-          className="flex-1 flex items-center justify-center text-neutral-400 hover:text-primary transition-colors py-1"
+          className="flex-1 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors py-2 rounded-md hover-blue"
         >
           <Image className="h-5 w-5 mr-1" />
-          <span className="text-sm">Photo</span>
+          <span className="text-sm font-medium">Photo</span>
         </button>
         <button 
           onClick={() => {
             setIsDialogOpen(true);
             setTimeout(() => handleAddMedia("video"), 100);
           }}
-          className="flex-1 flex items-center justify-center text-neutral-400 hover:text-primary transition-colors py-1"
+          className="flex-1 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors py-2 rounded-md hover-blue"
         >
           <Video className="h-5 w-5 mr-1" />
-          <span className="text-sm">Video</span>
+          <span className="text-sm font-medium">Video</span>
         </button>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="flex-1 flex items-center justify-center text-neutral-400 hover:text-primary transition-colors py-1"
+          className="flex-1 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors py-2 rounded-md hover-blue"
         >
           <Calendar className="h-5 w-5 mr-1" />
-          <span className="text-sm">Event</span>
+          <span className="text-sm font-medium">Event</span>
         </button>
         <button 
           onClick={() => setIsDialogOpen(true)}
-          className="flex-1 flex items-center justify-center text-neutral-400 hover:text-primary transition-colors py-1"
+          className="flex-1 flex items-center justify-center text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors py-2 rounded-md hover-blue"
         >
           <FileText className="h-5 w-5 mr-1" />
-          <span className="text-sm">Article</span>
+          <span className="text-sm font-medium">Article</span>
         </button>
       </div>
     </div>

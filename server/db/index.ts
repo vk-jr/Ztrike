@@ -2,6 +2,9 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 import { sql } from 'drizzle-orm';
 
 // Load environment variables from .env file
@@ -35,7 +38,18 @@ export async function checkDatabaseConnection() {
 export async function runMigrations() {
   try {
     console.log('[DB] Running migrations...');
-    // Run migrations in production
+    // Check if tables already exist before running migrations
+    const tableExists = await db.execute(sql`SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_name = 'users'
+    )`);
+    
+    if (tableExists[0]?.exists) {
+      console.log('[DB] Tables already exist, skipping migrations');
+      return;
+    }
+    
+    // Run migrations if tables don't exist
     await migrate(db, { migrationsFolder: './migrations' });
     console.log('[DB] Migrations completed successfully');
   } catch (error) {

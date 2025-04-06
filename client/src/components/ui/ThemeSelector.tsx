@@ -11,6 +11,11 @@ import { applyTheme, getCurrentTheme } from '@/lib/themeService';
 
 const themes = [
   {
+    id: 'futuristic',
+    name: 'Futuristic',
+    icon: <Sun className="h-5 w-5 text-blue-500" />,
+  },
+  {
     id: 'light',
     name: 'Light',
     icon: <Sun className="h-5 w-5" />,

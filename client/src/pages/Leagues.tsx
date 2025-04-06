@@ -12,6 +12,8 @@ import SportFilter from "@/components/SportFilter";
 import WorldMap from "@/components/WorldMap";
 import LeagueDetails from "@/components/LeagueDetails";
 import { toast } from "@/hooks/use-toast";
+import { useContext } from "react";
+import { AuthContext } from "@/App";
 
 export default function Leagues() {
   const [activeLeagueId, setActiveLeagueId] = useState<number | null>(null);
@@ -20,7 +22,8 @@ export default function Leagues() {
   const [subscribedLeagues, setSubscribedLeagues] = useState<number[]>([]);
   const [leagueNotifications, setLeagueNotifications] = useState<number[]>([]);
   const [showMap, setShowMap] = useState(false);
-  const userId = 1; // Mock user ID - in real app, would come from authentication
+  const { user: currentUser } = useContext(AuthContext);
+  const userId = currentUser?.id || 0;
 
   // Main leagues data query
   const { data: leagues, isLoading: isLoadingLeagues } = useQuery({
@@ -330,17 +333,16 @@ export default function Leagues() {
               </TabsList>
               
               {/* Live Matches Tab */}
-              <TabsContent value="live">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center">
-                      <Clock className="h-5 w-5 mr-2 text-red-500" /> Live Now
-                    </CardTitle>
-                    <CardDescription>
-                      Matches currently in progress
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-0">
+              <TabsContent value="live" className="pt-0">
+                <div className="p-0">
+                  <div className="flex items-center p-4 border-b border-neutral-200 bg-gradient-to-r from-red-50 to-red-100/50">
+                    <Clock className="h-5 w-5 mr-2 text-red-500" />
+                    <div>
+                      <h3 className="font-semibold text-red-700">Live Now</h3>
+                      <p className="text-xs text-red-600/70">Matches currently in progress</p>
+                    </div>
+                  </div>
+                  <div className="p-0">
                     {isLoadingLiveMatches ? (
                       Array(3).fill(0).map((_, index) => (
                         <div key={index} className="p-0">
@@ -349,59 +351,69 @@ export default function Leagues() {
                       ))
                     ) : liveMatches && liveMatches.length > 0 ? (
                       liveMatches.map((match: any) => (
-                        <div key={match.id} className="border-b border-neutral-200 last:border-0">
-                          <div className="flex items-center justify-between px-3 py-2 bg-red-50">
+                        <div key={match.id} className="border-b border-neutral-200 last:border-0 hover:bg-red-50/30 transition-colors">
+                          <div className="flex items-center justify-between px-4 py-2 bg-red-50 border-l-4 border-red-500">
                             <div className="flex items-center">
-                              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded">LIVE</span>
-                              <span className="ml-2 text-sm font-medium">{match.leagueId === 1 ? 'NBA' : match.leagueId === 3 ? 'Premier League' : 'UFC'}</span>
+                              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">LIVE</span>
+                              <span className="ml-2 text-sm font-medium text-red-700">{match.leagueId === 1 ? 'NBA' : match.leagueId === 3 ? 'Premier League' : 'UFC'}</span>
                             </div>
-                            <div className="text-xs text-neutral-400">
+                            <div className="text-xs font-medium text-red-600 bg-white px-2 py-1 rounded-full shadow-sm">
                               {match.leagueId === 1 ? 'Q3 5:42' : match.leagueId === 3 ? '65\'' : 'Round 2'}
                             </div>
                           </div>
-                          <div className="p-3">
+                          <div className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center">
-                                <img 
-                                  src={match.team1Logo} 
-                                  alt={match.team1} 
-                                  className="w-10 h-10 rounded-full object-cover"
-                                />
-                                <span className="ml-2 font-medium">{match.team1}</span>
+                                <div className="relative">
+                                  <img 
+                                    src={match.team1Logo} 
+                                    alt={match.team1} 
+                                    className="w-12 h-12 rounded-full object-cover border-2 border-neutral-200 shadow-sm"
+                                  />
+                                  <div className="absolute -bottom-1 -right-1 bg-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border border-neutral-200 shadow-sm">
+                                    {match.score1}
+                                  </div>
+                                </div>
+                                <span className="ml-3 font-medium text-neutral-800">{match.team1}</span>
                               </div>
-                              <div className="text-center">
-                                <div className="font-bold text-lg">
-                                  {match.score1 !== null && match.score2 !== null 
-                                    ? `${match.score1} - ${match.score2}` 
-                                    : 'vs'}
+                              <div className="text-center mx-4">
+                                <div className="font-bold text-lg text-red-600 bg-red-50 px-3 py-1 rounded-lg">
+                                  VS
                                 </div>
                               </div>
                               <div className="flex items-center">
-                                <span className="mr-2 font-medium">{match.team2}</span>
-                                <img 
-                                  src={match.team2Logo} 
-                                  alt={match.team2} 
-                                  className="w-10 h-10 rounded-full object-cover"
-                                />
+                                <span className="mr-3 font-medium text-neutral-800">{match.team2}</span>
+                                <div className="relative">
+                                  <img 
+                                    src={match.team2Logo} 
+                                    alt={match.team2} 
+                                    className="w-12 h-12 rounded-full object-cover border-2 border-neutral-200 shadow-sm"
+                                  />
+                                  <div className="absolute -bottom-1 -left-1 bg-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center border border-neutral-200 shadow-sm">
+                                    {match.score2}
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                            <Button className="w-full mt-3" size="sm">
+                            <Button className="w-full mt-4" size="sm" variant="acrylic">
                               Watch Now
                             </Button>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="py-6 text-center">
-                        <Clock className="h-12 w-12 mx-auto text-neutral-300" />
-                        <h3 className="mt-2 font-medium">No live matches</h3>
-                        <p className="text-sm text-neutral-400 mt-1">
-                          Check back later for live match updates
+                      <div className="py-12 text-center">
+                        <div className="bg-red-50 p-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto">
+                          <Clock className="h-10 w-10 text-red-300" />
+                        </div>
+                        <h3 className="mt-4 font-medium text-lg text-neutral-700">No live matches</h3>
+                        <p className="text-sm text-neutral-500 mt-2 max-w-md mx-auto">
+                          There are no matches currently in progress. Check back later or explore upcoming matches.
                         </p>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </TabsContent>
               
               {/* Upcoming Matches Tab */}

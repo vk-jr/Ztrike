@@ -1,11 +1,14 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, Calendar } from "lucide-react";
+import { Bell, Calendar, UserPlus, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useContext } from "react";
+import { AuthContext } from "@/App";
 
 export default function RightSidebar() {
-  // Mock user ID - in real app, this would come from authentication
-  const userId = 1;
+  // Get user ID from AuthContext instead of hardcoded value
+  const { user: currentUser } = useContext(AuthContext);
+  const userId = currentUser?.id || 0;
 
   const { data: upcomingMatches, isLoading: isLoadingMatches } = useQuery({
     queryKey: ['/api/matches/upcoming'],
@@ -16,11 +19,12 @@ export default function RightSidebar() {
   });
 
   return (
-    <div className="hidden md:block w-64 lg:w-80 flex-shrink-0">
-      <div className="sticky top-24">
-        {/* Upcoming Matches */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
-          <div className="p-4 border-b border-neutral-200">
+    <div className="hidden md:block w-64 lg:w-80 flex-shrink-0 transition-all duration-300">
+      <div className="bg-gradient-to-br from-indigo-50 via-blue-50 to-sky-100 rounded-xl shadow-xl p-4 sticky top-20 border border-blue-200/50 backdrop-blur-sm hover:shadow-2xl hover:border-blue-300/50 transition-all duration-300">
+        <div className="sticky top-24 space-y-6">
+          {/* Upcoming Matches */}
+        <div className="bg-white/95 rounded-lg shadow-lg overflow-hidden backdrop-blur-sm border border-blue-100/50 hover:shadow-xl transition-all duration-300 hover:bg-white">
+          <div className="p-4 border-b border-neutral-200/75">
             <h3 className="font-semibold">Upcoming Matches</h3>
           </div>
           
@@ -98,14 +102,14 @@ export default function RightSidebar() {
             </div>
           )}
           
-          <div className="p-3 bg-neutral-50 text-center">
+          <div className="p-3 bg-neutral-50/80 text-center hover:bg-neutral-100/80 transition-colors">
             <Link href="/leagues" className="text-primary text-sm font-medium">View All Matches</Link>
           </div>
         </div>
         
         {/* People You May Know */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-4">
-          <div className="p-4 border-b border-neutral-200">
+        <div className="bg-white/95 rounded-lg shadow-lg overflow-hidden backdrop-blur-sm border border-blue-100/50 hover:shadow-xl transition-all duration-300 hover:bg-white">
+          <div className="p-4 border-b border-neutral-200/75">
             <h3 className="font-semibold">People You May Know</h3>
           </div>
           
@@ -163,39 +167,39 @@ export default function RightSidebar() {
             </div>
           )}
           
-          <div className="p-3 bg-neutral-50 text-center">
+          <div className="p-3 bg-neutral-50/80 text-center hover:bg-neutral-100/80 transition-colors">
             <Link href="/network" className="text-primary text-sm font-medium">View All Suggestions</Link>
           </div>
         </div>
         
         {/* Trending Topics */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-neutral-200">
+        <div className="bg-white/95 rounded-lg shadow-lg overflow-hidden backdrop-blur-sm border border-blue-100/50 hover:shadow-xl transition-all duration-300 hover:bg-white">
+          <div className="p-4 border-b border-neutral-200/75">
             <h3 className="font-semibold">Trending in Sports</h3>
           </div>
           
-          <div className="p-3">
-            <div className="py-2 border-b border-neutral-200">
+          <div className="divide-y divide-neutral-200/75">
+            <div className="px-4 py-3 hover:bg-neutral-50/80 transition-colors">
               <Link href="#" className="block text-sm font-medium hover:text-primary transition-colors">#NBADraft2023</Link>
               <p className="text-xs text-neutral-400 mt-1">52.3K posts</p>
             </div>
             
-            <div className="py-2 border-b border-neutral-200">
+            <div className="px-4 py-3 hover:bg-neutral-50/80 transition-colors">
               <Link href="#" className="block text-sm font-medium hover:text-primary transition-colors">#OlympicQualifiers</Link>
               <p className="text-xs text-neutral-400 mt-1">38.7K posts</p>
             </div>
             
-            <div className="py-2 border-b border-neutral-200">
+            <div className="px-4 py-3 hover:bg-neutral-50/80 transition-colors">
               <Link href="#" className="block text-sm font-medium hover:text-primary transition-colors">#F1GrandPrix</Link>
               <p className="text-xs text-neutral-400 mt-1">24.2K posts</p>
             </div>
             
-            <div className="py-2 border-b border-neutral-200">
+            <div className="px-4 py-3 hover:bg-neutral-50/80 transition-colors">
               <Link href="#" className="block text-sm font-medium hover:text-primary transition-colors">#WimbledonFinals</Link>
               <p className="text-xs text-neutral-400 mt-1">19.8K posts</p>
             </div>
             
-            <div className="py-2">
+            <div className="px-4 py-3 hover:bg-neutral-50/80 transition-colors">
               <Link href="#" className="block text-sm font-medium hover:text-primary transition-colors">#WorldCupQualifiers</Link>
               <p className="text-xs text-neutral-400 mt-1">15.4K posts</p>
             </div>
@@ -203,8 +207,6 @@ export default function RightSidebar() {
         </div>
       </div>
     </div>
+    </div>
   );
 }
-
-// Missing import - adding it here:
-import { UserPlus, X } from "lucide-react";

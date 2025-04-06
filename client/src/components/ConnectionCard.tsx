@@ -21,12 +21,33 @@ export default function ConnectionCard({ connection, currentUserId }: Connection
         status: "pending"
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Connection request sent",
         description: `You've sent a connection request to ${connection.fullName}`,
       });
+      
+      // Update the connections cache to immediately show the new connection
+      const connectionData = {
+        id: data?.id || Date.now(), // Use response ID or generate temporary one
+        user: {
+          id: connection.id,
+          fullName: connection.fullName,
+          avatar: connection.avatar || 'https://via.placeholder.com/40',
+          sport: connection.sport,
+          team: connection.team
+        }
+      };
+      
+      // Get current connections from cache
+      const currentConnections = queryClient.getQueryData([`/api/users/${currentUserId}/connections`]) || [];
+      
+      // Add the new connection to the cache
+      queryClient.setQueryData([`/api/users/${currentUserId}/connections`], [...currentConnections, connectionData]);
+      
+      // Also invalidate queries to ensure data consistency
       queryClient.invalidateQueries({ queryKey: [`/api/connections/suggestions?userId=${currentUserId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${currentUserId}/connections`] });
     },
     onError: () => {
       toast({

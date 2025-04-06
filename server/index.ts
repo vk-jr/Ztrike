@@ -1,6 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
+
 import { checkDatabaseConnection, runMigrations } from "./db/index";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -92,15 +97,22 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // Use port 5001 instead of 5000 to avoid conflicts
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  const port = parseInt(process.env.PORT || '5001');
+  const startServer = (port: number) => {
+    server.listen(port, () => {
+      log(`serving on port ${port}`);
+    }).on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        log(`Port ${port} is already in use, trying port ${port + 1}`);
+        startServer(port + 1);
+      } else {
+        log(`Error starting server: ${err.message}`);
+      }
+    });
+  };
+  
+  startServer(port);
 })();

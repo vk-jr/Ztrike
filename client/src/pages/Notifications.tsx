@@ -16,10 +16,14 @@ import {
   Settings,
   CheckCircle2
 } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "@/App";
 
 export default function Notifications() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const userId = 1; // Mock user ID - in a real app, this would come from authentication
+  // Get user ID from AuthContext instead of hardcoded value
+  const { user: currentUser } = useContext(AuthContext);
+  const userId = currentUser?.id || 0;
 
   const { data: liveMatches, isLoading: isLoadingLiveMatches } = useQuery({
     queryKey: ['/api/matches/live'],
@@ -143,29 +147,29 @@ export default function Notifications() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold flex items-center">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <Card className="shadow-md border border-neutral-100 overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-neutral-100">
+          <CardTitle className="text-2xl font-bold flex items-center text-primary">
             <Bell className="h-6 w-6 mr-2 text-primary" /> Notifications
           </CardTitle>
-          <CardDescription className="text-neutral-400">
+          <CardDescription className="text-neutral-600">
             Stay updated with match alerts, connection requests, and more
           </CardDescription>
-          <div className="flex justify-between items-center mt-4">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mt-4">
             <Tabs 
               defaultValue="all" 
               value={filter} 
               onValueChange={(value) => setFilter(value as 'all' | 'unread')}
-              className="w-full"
+              className="w-full sm:w-auto"
             >
-              <TabsList className="grid w-[200px] grid-cols-2">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="unread">Unread</TabsTrigger>
+              <TabsList className="grid w-full sm:w-[200px] grid-cols-2 bg-neutral-100/80">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-white">All</TabsTrigger>
+                <TabsTrigger value="unread" className="data-[state=active]:bg-primary data-[state=active]:text-white">Unread</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button variant="outline" size="sm" className="flex items-center">
-              <Settings className="h-4 w-4 mr-2" /> Settings
+            <Button variant="outline" size="sm" className="flex items-center border-neutral-200">
+              <Settings className="h-4 w-4 mr-2" /> Notification Settings
             </Button>
           </div>
         </CardHeader>
@@ -174,8 +178,8 @@ export default function Notifications() {
             Array(3).fill(0).map((_, index) => (
               <div key={index} className="p-4 border-b border-neutral-200">
                 <div className="flex">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="ml-3 flex-1">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="ml-4 flex-1">
                     <Skeleton className="h-5 w-3/5" />
                     <Skeleton className="h-4 w-4/5 mt-1" />
                     <Skeleton className="h-3 w-20 mt-2" />
@@ -185,68 +189,125 @@ export default function Notifications() {
             ))
           ) : sortedNotifications.length > 0 ? (
             <div>
-              {sortedNotifications.map((notification) => (
-                <div 
-                  key={notification.id}
-                  className={`p-4 border-b border-neutral-200 ${!notification.read ? 'bg-blue-50' : 'hover:bg-neutral-50'} transition-colors`}
-                >
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      {notification.type === 'match' || notification.type === 'reminder' ? (
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          {getIconForNotificationType(notification.type)}
-                        </div>
-                      ) : (
-                        <img 
-                          src={(notification as any).user?.avatar || 'https://via.placeholder.com/40'} 
-                          alt="User" 
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <div className="flex justify-between">
-                        <p className={`${!notification.read ? 'font-semibold' : 'font-medium'}`}>
-                          {notification.title}
-                        </p>
-                        {!notification.read && (
-                          <span className="flex-shrink-0 ml-2 w-2 h-2 bg-primary rounded-full"></span>
+              {sortedNotifications.map((notification) => {
+                // Determine background color based on notification type
+                let bgColor = !notification.read ? 'bg-blue-50' : 'hover:bg-neutral-50';
+                let borderColor = 'border-neutral-200';
+                let iconBgColor = 'bg-primary/10';
+                
+                // Customize styling based on notification type
+                switch(notification.type) {
+                  case 'match':
+                    bgColor = !notification.read ? 'bg-red-50' : 'hover:bg-red-50/30';
+                    borderColor = !notification.read ? 'border-red-100' : 'border-neutral-200';
+                    iconBgColor = 'bg-red-100';
+                    break;
+                  case 'connection':
+                    bgColor = !notification.read ? 'bg-green-50' : 'hover:bg-green-50/30';
+                    borderColor = !notification.read ? 'border-green-100' : 'border-neutral-200';
+                    break;
+                  case 'like':
+                    bgColor = !notification.read ? 'bg-pink-50' : 'hover:bg-pink-50/30';
+                    borderColor = !notification.read ? 'border-pink-100' : 'border-neutral-200';
+                    break;
+                  case 'message':
+                    bgColor = !notification.read ? 'bg-blue-50' : 'hover:bg-blue-50/30';
+                    borderColor = !notification.read ? 'border-blue-100' : 'border-neutral-200';
+                    break;
+                  case 'reminder':
+                    bgColor = !notification.read ? 'bg-orange-50' : 'hover:bg-orange-50/30';
+                    borderColor = !notification.read ? 'border-orange-100' : 'border-neutral-200';
+                    iconBgColor = 'bg-orange-100';
+                    break;
+                }
+                
+                return (
+                  <div 
+                    key={notification.id}
+                    className={`p-4 border-b ${borderColor} ${bgColor} transition-colors`}
+                  >
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        {notification.type === 'match' || notification.type === 'reminder' ? (
+                          <div className={`h-12 w-12 rounded-full ${iconBgColor} flex items-center justify-center shadow-sm border border-white`}>
+                            {getIconForNotificationType(notification.type)}
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <img 
+                              src={(notification as any).user?.avatar || 'https://via.placeholder.com/40'} 
+                              alt="User" 
+                              className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
+                            />
+                            {notification.type === 'connection' && (
+                              <div className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-1 shadow-sm border border-white">
+                                <UserPlus className="h-3 w-3" />
+                              </div>
+                            )}
+                            {notification.type === 'like' && (
+                              <div className="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-sm border border-white">
+                                <Heart className="h-3 w-3" />
+                              </div>
+                            )}
+                            {notification.type === 'message' && (
+                              <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1 shadow-sm border border-white">
+                                <MessageSquare className="h-3 w-3" />
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
-                      <p className="text-sm text-neutral-500 mt-0.5">{notification.description}</p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-xs text-neutral-400">{formatNotificationTime(notification.time)}</span>
-                        {notification.type === 'match' && (
-                          <Button size="sm" variant="secondary" className="text-xs">
-                            Watch Now
-                          </Button>
-                        )}
-                        {notification.type === 'message' && (
-                          <Link href="/messages">
-                            <Button size="sm" variant="secondary" className="text-xs">
-                              Reply
+                      <div className="ml-4 flex-1">
+                        <div className="flex justify-between">
+                          <p className={`${!notification.read ? 'font-semibold' : 'font-medium'} text-neutral-800`}>
+                            {notification.title}
+                          </p>
+                          {!notification.read && (
+                            <span className="flex-shrink-0 ml-2 w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                          )}
+                        </div>
+                        <p className="text-sm text-neutral-600 mt-1">{notification.description}</p>
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-xs font-medium px-2 py-1 bg-neutral-100 rounded-full text-neutral-500">
+                            {formatNotificationTime(notification.time)}
+                          </span>
+                          {notification.type === 'match' && (
+                            <Button size="sm" variant="acrylic" className="text-xs">
+                              Watch Now
                             </Button>
-                          </Link>
-                        )}
+                          )}
+                          {notification.type === 'message' && (
+                            <Link href="/messages">
+                              <Button size="sm" variant="acrylic" className="text-xs">
+                                Reply
+                              </Button>
+                            </Link>
+                          )}
+                          {notification.type === 'connection' && (
+                            <Button size="sm" variant="outline" className="text-xs border-green-200 text-green-600 bg-green-50">
+                              View Profile
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               
-              <div className="p-4 text-center">
-                <Button variant="outline" className="text-neutral-500">
+              <div className="p-6 text-center border-t border-neutral-200 bg-neutral-50">
+                <Button variant="outline" className="text-primary bg-white border-primary/20 shadow-sm">
                   Mark All as Read <CheckCircle2 className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="py-12 text-center">
-              <div className="bg-neutral-100 p-6 rounded-full mx-auto w-20 h-20 flex items-center justify-center">
-                <Activity className="h-10 w-10 text-neutral-400" />
+            <div className="py-16 text-center">
+              <div className="bg-primary/10 p-6 rounded-full mx-auto w-24 h-24 flex items-center justify-center shadow-inner border border-primary/20">
+                <Activity className="h-12 w-12 text-primary/60" />
               </div>
-              <h3 className="mt-4 font-medium text-lg">No notifications</h3>
-              <p className="text-neutral-400 text-sm mt-1 max-w-md mx-auto">
+              <h3 className="mt-6 font-semibold text-xl text-neutral-800">No notifications</h3>
+              <p className="text-neutral-600 text-sm mt-2 max-w-md mx-auto px-4">
                 {filter === 'unread' 
                   ? "You don't have any unread notifications" 
                   : "Follow leagues and connect with athletes to get notifications"}
@@ -254,7 +315,7 @@ export default function Notifications() {
               {filter === 'unread' && (
                 <Button 
                   variant="outline" 
-                  className="mt-4"
+                  className="mt-6 border-primary/20 text-primary bg-primary/5 shadow-sm"
                   onClick={() => setFilter('all')}
                 >
                   View All Notifications

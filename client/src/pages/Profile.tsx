@@ -38,12 +38,15 @@ import {
   Edit,
   Share2
 } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "@/App";
 
 export default function Profile() {
   const { id } = useParams();
   const userId = parseInt(id);
-  // Current user ID - would come from authentication in a real app
-  const currentUserId = 1;
+  // Get current user ID from AuthContext instead of hardcoded value
+  const { user: currentUser } = useContext(AuthContext);
+  const currentUserId = currentUser?.id || 0;
   const isOwnProfile = userId === currentUserId;
 
   const { data: user, isLoading: isLoadingUser } = useQuery({
@@ -131,9 +134,11 @@ export default function Profile() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">{user.fullName}</h1>
                 <div className="flex flex-wrap items-center gap-2 mt-1 mb-3">
-                  <Badge variant="secondary" className="text-primary bg-primary/10 border-primary/20 font-medium">
-                    {user.sport}
-                  </Badge>
+                  {user.sport && (
+                    <Badge variant="secondary" className="text-primary bg-primary/10 border-primary/20 font-medium">
+                      {user.sport}
+                    </Badge>
+                  )}
                   <span className="text-sm text-neutral-500">
                     {user.position} {user.team ? `@ ${user.team}` : ''}
                   </span>
@@ -206,7 +211,7 @@ export default function Profile() {
               <div className="border-t pt-4 space-y-3">
                 <div className="flex items-center text-sm">
                   <Briefcase className="h-4 w-4 text-neutral-400 mr-2" />
-                  <span>Athlete at {user.team || "Not specified"}</span>
+                  <span>{user.position || "Athlete"} at {user.team || "Not specified"}</span>
                 </div>
                 <div className="flex items-center text-sm">
                   <MapPin className="h-4 w-4 text-neutral-400 mr-2" />

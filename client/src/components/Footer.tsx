@@ -9,9 +9,9 @@ export default function Footer() {
           <div className="flex items-center">
             <Link href="/" className="text-primary font-bold text-lg flex items-center">
               <Volleyball className="mr-2 h-5 w-5" />
-              <span>SportConnect</span>
+              <span>ZTRIKE</span>
             </Link>
-            <span className="text-neutral-300 text-sm ml-2">© 2023 SportConnect, Inc.</span>
+            <span className="text-neutral-300 text-sm ml-2">© 2023 ZTRIKE, Inc.</span>
           </div>
           
           <div className="flex mt-4 md:mt-0 space-x-6">

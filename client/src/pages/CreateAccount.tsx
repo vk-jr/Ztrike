@@ -53,7 +53,7 @@ export default function CreateAccount() {
     onSuccess: () => {
       toast({
         title: "Account created!",
-        description: "Welcome to SportConnect! Your account has been created successfully.",
+        description: "Welcome to ZTRIKE! Your account has been created successfully.",
       });
       navigate("/");
     },
@@ -120,7 +120,7 @@ export default function CreateAccount() {
             <div>
               <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
               <CardDescription>
-                Join SportConnect and connect with other athletes
+                Join ZTRIKE and connect with other athletes
               </CardDescription>
             </div>
             <div className="rounded-full bg-neutral-100 px-3 py-1 text-sm">
