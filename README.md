@@ -29,8 +29,14 @@ A dynamic web-based platform designed to empower athletes by helping them showca
 ## 🏗️ Tech Stack
 
 Frontend: React + TypeScript + Tailwind CSS​
+
 Backend: Node.js ​
+
 Database: PostgreSQL​
+
 ORM: Drizzle ORM​
+
 Dev Environment: IDX​
+
 Styling Tools: Post CSS, Tailwind
+
