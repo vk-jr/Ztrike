@@ -1,4 +1,4 @@
-#Dear GDG Hackathon India Organizing Team,
+# Dear GDG Hackathon India Organizing Team,
 
 We regret to inform you that due to unforeseen technical challenges, we were unable to fully deploy our webpage as intended. While we have hosted the site via GitHub Pages, some functionalities are not operating as expected. However, all features can be reviewed by importing the project into Firebase Studio, where the core logic and components are fully functional. We are extremely frustrated and disappointed, having explored every possible solution to resolve the issue within the time frame. We genuinely hope our efforts and implementation will still be considered for evaluation.
 
