@@ -1,337 +1,448 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Trophy, Clock, Calendar, Map as MapIcon, Globe, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
-import { useRouter } from "next/navigation";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+import React from "react";
 
-interface League {
+// Sport-specific stat configuration
+const SPORT_STATS = {
+  football: {
+    mainStat: { key: 'Goals', label: 'Goals', color: 'text-green-600' },
+    secondaryStat: { key: 'assist', label: 'Assists', color: 'text-blue-600' },
+    additionalStats: [
+      { key: 'clean_sheets', label: 'Clean Sheets', color: 'text-green-700', bgColor: 'bg-green-50' },
+      { key: 'Saves', label: 'Saves', color: 'text-blue-700', bgColor: 'bg-blue-50' }
+    ]
+  },
+  cricket: {
+    mainStat: { key: 'runs', label: 'Runs', color: 'text-green-600' },
+    secondaryStat: { key: 'wickets', label: 'Wickets', color: 'text-blue-600' },
+    additionalStats: [
+      { key: 'centuries', label: 'Centuries', color: 'text-purple-700', bgColor: 'bg-purple-50' },
+      { key: 'strike_rate', label: 'Strike Rate', color: 'text-orange-700', bgColor: 'bg-orange-50' }
+    ]
+  },
+  basketball: {
+    mainStat: { key: 'points', label: 'Points', color: 'text-green-600' },
+    secondaryStat: { key: 'assists', label: 'Assists', color: 'text-blue-600' },
+    additionalStats: [
+      { key: 'rebounds', label: 'Rebounds', color: 'text-purple-700', bgColor: 'bg-purple-50' },
+      { key: 'steals', label: 'Steals', color: 'text-orange-700', bgColor: 'bg-orange-50' }
+    ]
+  },
+  hockey: {
+    mainStat: { key: 'goals', label: 'Goals', color: 'text-green-600' },
+    secondaryStat: { key: 'assists', label: 'Assists', color: 'text-blue-600' },
+    additionalStats: [
+      { key: 'saves', label: 'Saves', color: 'text-blue-700', bgColor: 'bg-blue-50' },
+      { key: 'penalties', label: 'Penalties', color: 'text-red-700', bgColor: 'bg-red-50' }
+    ]
+  }
+} as const;
+
+interface Team {
   id: string;
-  name?: string;
-  description?: string;
-  // Add other properties if they are consistently present in league documents
+  name: string;
+  matches_played: number;
+  wins: number;
+  draw: number;
+  losses: number;
+  points: number;
+  // Common sport-specific stats (add more as needed based on your data)
+  goals_for?: number;
+  goals_against?: number;
+  goal_difference?: number;
+  net_run_rate?: number;
+  points_for?: number;
+  points_against?: number;
+  point_difference?: number;
+  [key: string]: any; // Keep index signature for flexibility
 }
 
-export default function LeaguesPage() {
-  const [showMap, setShowMap] = useState(false);
-  const [selectedSport, setSelectedSport] = useState("all");
-  const [footballLeagues, setFootballLeagues] = useState<League[]>([]);
-  const [cricketLeagues, setCricketLeagues] = useState<League[]>([]);
-  const [basketballLeagues, setBasketballLeagues] = useState<League[]>([]);
-  const [hockeyLeagues, setHockeyLeagues] = useState<League[]>([]);
-  const router = useRouter();
+interface Player {
+  id: string;
+  name: string;
+  position: string;
+  jersey_number?: string;
+  matches_played?: number;
+  MVPs?: number;
+  [key: string]: any;
+}
 
-  const sports = [
-    { id: "cricket", name: "Cricket", color: "bg-teal-100 text-teal-700 border-teal-200" },
-    { id: "football", name: "Football", color: "bg-blue-100 text-blue-700 border-blue-200" },
-    { id: "basketball", name: "Basketball", color: "bg-orange-100 text-orange-700 border-orange-200" },
-    { id: "hockey", name: "Hockey", color: "bg-purple-100 text-purple-700 border-purple-200" },
-   { id: "baseball", name: "Baseball", color: "bg-red-100 text-red-700 border-red-200" },
-    { id: "golf", name: "Golf", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-    { id: "cycling", name: "Cycling", color: "bg-violet-100 text-violet-700 border-violet-200" },
-    { id: "all", name: "All", color: "bg-gray-100 text-gray-700 border-gray-200" },
-  ];
+export default function LeagueDetailsClient({ leagueId }: { leagueId: string }) {
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [leagueInfo, setLeagueInfo] = useState<{ id: string; sport: string; name?: string; season?: string; country?: string; description?: string; } | null>(null);
 
-  const leagues = [
-    {
-      name: "NBA",
-      sport: "Basketball",
-      subscribed: true,
-      logo: "🏀"
-    },
-    {
-      name: "NFL",
-      sport: "American Football",
-      subscribed: true,
-      logo: "🏈"
-    },
-    {
-      name: "Premier League",
-      sport: "Soccer",
-      subscribed: true,
-      logo: "⚽"
-    },
-  ];
-
-  const liveMatches = [
-    {
-      league: "NBA",
-      homeTeam: "Lakers",
-      awayTeam: "Celtics",
-      homeScore: "78",
-      awayScore: "82",
-      quarter: "Q3 5:42",
-      homeLogo: "🏀",
-      awayLogo: "🍀"
-    },
-    {
-      league: "Premier League",
-      homeTeam: "Liverpool",
-      awayTeam: "Man City",
-      homeScore: "2",
-      awayScore: "1",
-      quarter: "65'",
-      homeLogo: "🔴",
-      awayLogo: "🔵"
-    },
-  ];
+  const getSportIcon = (sport: string) => {
+    switch(sport) {
+      case 'football': return '⚽';
+      case 'cricket': return '🏏';
+      case 'basketball': return '🏀';
+      case 'hockey': return '🏑';
+      default: return '🎮';
+    }
+  };
 
   useEffect(() => {
-    const fetchLeagues = async () => {
-      if (selectedSport === 'all') return;
+    const fetchLeagueDetails = async () => {
+      setLoading(true);
+      setError(null);
       
       try {
-        const leaguesCol = collection(db, "leagues", selectedSport, "leagues");
-        const snapshot = await getDocs(leaguesCol);
-        const leagueDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Try to find the league in each sport's collection
+        const sports = ['football', 'cricket', 'basketball', 'hockey'];
+        let leagueDoc = null;
+        let currentSport = '';
         
-        // Set the leagues state based on selected sport
-        switch(selectedSport) {
-          case 'football':
-            setFootballLeagues(leagueDocs);
+        for (const s of sports) {
+          const docRef = doc(db, "leagues", s, "leagues", leagueId);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            leagueDoc = docSnap;
+            currentSport = s;
             break;
-          case 'cricket':
-            setCricketLeagues(leagueDocs);
-            break;
-          case 'basketball':
-            setBasketballLeagues(leagueDocs);
-            break;
-          case 'hockey':
-            setHockeyLeagues(leagueDocs);
-            break;
+          }
         }
-      } catch (error) {
-        console.error(`Error fetching ${selectedSport} leagues:`, error);
+
+        if (!leagueDoc) {
+          throw new Error('League not found');
+        }
+
+        // Set league info
+        setLeagueInfo({
+          id: leagueDoc.id,
+          ...leagueDoc.data(),
+          sport: currentSport
+        } as any);
+
+        // Fetch teams
+        const teamsCollection = collection(db, "leagues", currentSport, "leagues", leagueId, "teams");
+        const teamsSnapshot = await getDocs(teamsCollection);
+        const teamsList = teamsSnapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data(),
+          // Ensure default values for required fields
+          matches_played: doc.data().matches_played || 0,
+          wins: doc.data().wins || 0,
+          draw: doc.data().draw || 0,
+          losses: doc.data().losses || 0,
+          points: doc.data().points || 0,
+          // Include sport-specific stats
+          goals_for: doc.data().goals_for, // Include football/hockey stat
+          goals_against: doc.data().goals_against, // Include football/hockey stat
+          goal_difference: doc.data().goal_difference, // Include football/hockey stat
+          net_run_rate: doc.data().net_run_rate, // Include cricket stat
+          points_for: doc.data().points_for, // Include basketball stat
+          points_against: doc.data().points_against, // Include basketball stat
+          point_difference: doc.data().point_difference, // Include basketball stat
+        })) as Team[];
+
+        // Sort teams
+        if (currentSport === 'cricket') {
+          setTeams(teamsList.sort((a, b) => {
+            if (b.points !== a.points) {
+              return b.points - a.points; // Sort by points first (descending)
+            } else {
+              return (b.NRR ?? 0) - (a.NRR ?? 0); // Then sort by NRR (descending)
+            }
+          }));
+        } else {
+          setTeams(teamsList.sort((a, b) => b.points - a.points)); // Sort by points for other sports
+        }
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch league details");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchLeagues();
-  }, [selectedSport]);
+    fetchLeagueDetails();
+  }, [leagueId]);
 
-  // Sport-specific emojis for league icons
-  const sportIcons = {
-    football: "⚽",
-    cricket: "🏏",
-    basketball: "🏀",
-    hockey: "🏑"
-  };
-
-  // Get the current leagues based on selected sport
-  const getCurrentLeagues = () => {
-    switch(selectedSport) {
-      case 'football':
-        return footballLeagues;
-      case 'cricket':
-        return cricketLeagues;
-      case 'basketball':
-        return basketballLeagues;
-      case 'hockey':
-        return hockeyLeagues;
-      default:
-        return [];
+  const handleTeamClick = async (teamId: string) => {
+    setSelectedTeam(teamId);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const sport = leagueInfo?.sport || 'football';
+      const playersCollection = collection(db, "leagues", sport, "leagues", leagueId, "teams", teamId, "players");
+      const playersSnapshot = await getDocs(playersCollection);
+      setPlayers(playersSnapshot.docs.map(doc => ({ 
+        id: doc.id,
+        ...doc.data()
+      })) as Player[]);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch players");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Leagues & Live Scores</h1>
-        <p className="text-gray-600">Follow your favorite leagues and never miss a match</p>
-      </div>
-
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Search leagues or sports..."
-            className="pl-10"
-          />
+      {/* League Header */}
+      {leagueInfo && (
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="h-16 w-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
+              {getSportIcon(leagueInfo.sport)}
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{leagueInfo.name || leagueId}</h1>
+              <div className="flex items-center gap-2 text-gray-600 mt-1">
+                <span className="capitalize">{leagueInfo.sport}</span>
+                {leagueInfo.season && <span>• Season {leagueInfo.season}</span>}
+                {leagueInfo.country && <span>• {leagueInfo.country}</span>}
+              </div>
+            </div>
+          </div>
+          {leagueInfo.description && (
+            <p className="text-gray-600">{leagueInfo.description}</p>
+          )}
         </div>
-      </div>
-
-      {/* Sports Filter */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-4 w-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">Filter by Sport</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {sports.map((sport) => (
-            <Button
-              key={sport.id}
-              variant={selectedSport === sport.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedSport(sport.id)}
-              className={selectedSport === sport.id ? "" : sport.color}
-            >
-              {sport.name}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Map Toggle */}
-      <div className="mb-6 flex justify-end">
-        <Button
-          variant="outline"
-          onClick={() => setShowMap(!showMap)}
-          className="flex items-center gap-2"
-        >
-          {showMap ? <Globe className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
-          {showMap ? "Hide Map" : "Show Map"}
-        </Button>
-      </div>
-
-      {/* World Map (when toggled) */}
-      {showMap && (
-        <Card className="mb-6">
-          <CardContent className="p-0 h-96">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d25103381.17961603!2d-95.677068!3d37.062500000000005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54eab584e432360b%3A0x1c3bb99243deb742!2sUnited%20States!5e0!3m2!1sen!2sus!4v1717848000000!5m2!1sen!2sus"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen={false}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </CardContent>
-        </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Leagues Sidebar */}
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Points Table */}
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Leagues
+              <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                League Table
+                {loading && <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>}
               </CardTitle>
-              <p className="text-sm text-gray-600">
-                {showMap ? `${selectedSport.charAt(0).toUpperCase() + selectedSport.slice(1)} leagues from around the world` : "Major sports leagues from around the world"}
-              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {selectedSport !== 'all' ? (
-                getCurrentLeagues().map((league) => (
-                  <div key={league.id} className="flex items-center justify-between cursor-pointer" onClick={() => router.push(`/leagues/${encodeURIComponent(league.id)}`)}>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">{sportIcons[selectedSport as keyof typeof sportIcons]}</div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">{league.name || league.id}</h3>
-                        {league.description && <p className="text-sm text-gray-600">{league.description}</p>}
-                        {!league.description && <p className="text-sm text-gray-600">{selectedSport.charAt(0).toUpperCase() + selectedSport.slice(1)}</p>}
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline" className="text-xs">View</Button>
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500">Select a sport to view leagues</div>
+            <CardContent>
+              {loading && (
+                <div className="text-center py-8 text-blue-600 font-semibold">Loading league data...</div>
+              )}
+              {error && (
+                <div className="text-center py-8 text-red-600 flex flex-col items-center">
+                  <AlertCircle className="w-8 h-8 mb-2" />
+                  {error}
+                </div>
+              )}
+              {!loading && !error && (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-600">
+                        <th className="px-4 py-3 text-left font-medium">Position</th>
+                        <th className="px-4 py-3 text-left font-medium">Team</th>
+                        <th className="px-4 py-3 text-center font-medium">P</th>
+                        <th className="px-4 py-3 text-center font-medium">M</th>
+                        <th className="px-4 py-3 text-center font-medium">W</th>
+                        <th className="px-4 py-3 text-center font-medium">L</th>
+                        {/* Sport-specific columns */}
+                        {leagueInfo?.sport === 'football' && (
+                          <>
+                          <th className="px-4 py-3 text-center font-medium">D</th>
+                            <th className="px-4 py-3 text-center font-medium">GF</th>
+                            <th className="px-4 py-3 text-center font-medium">GA</th>
+                            <th className="px-4 py-3 text-center font-medium">GD</th>
+                          </>
+                        )}
+                        {leagueInfo?.sport === 'cricket' && (
+                          <th className="px-4 py-3 text-center font-medium">NRR</th>
+                        )}
+                        {leagueInfo?.sport === 'basketball' && (
+                          <>
+                            <th className="px-4 py-3 text-center font-medium">PF</th>
+                            <th className="px-4 py-3 text-center font-medium">PA</th>
+                            <th className="px-4 py-3 text-center font-medium">PD</th>
+                          </>
+                        )}
+                         {leagueInfo?.sport === 'hockey' && (
+                          <>
+                          <th className="px-4 py-3 text-center font-medium">D</th>
+                            <th className="px-4 py-3 text-center font-medium">GF</th>
+                            <th className="px-4 py-3 text-center font-medium">GA</th>
+                            <th className="px-4 py-3 text-center font-medium">GD</th>
+                          </>
+                        )}
+                        <th className="px-4 py-3 text-center font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teams.map((team, index) => (
+                        <tr key={team.id} className="border-t hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 text-left">{index + 1}</td>
+                          <td className="px-4 py-3 text-left font-medium">{team.name}</td>
+                          <td className="px-4 py-3 text-center font-semibold text-blue-600">{team.points}</td>
+                          <td className="px-4 py-3 text-center">{team.matches}</td>
+                          <td className="px-4 py-3 text-center text-green-600">{team.wins}</td>
+                          <td className="px-4 py-3 text-center text-red-600">{team.losses}</td>
+                          {/* Sport-specific data */}
+                          {leagueInfo?.sport === 'football' && (
+                            <>
+                            <td className="px-4 py-3 text-center text-gray-600">{team.draw}</td>
+                              <td className="px-4 py-3 text-center">{team.goals_for ?? '-'}</td> 
+                              <td className="px-4 py-3 text-center">{team.goals_against ?? '-'}</td>
+                              <td className="px-4 py-3 text-center">{team.goal_difference ?? '-'}</td>
+                            </>
+                          )}
+                          {leagueInfo?.sport === 'cricket' && (
+                             <td className="px-4 py-3 text-center">{team.NRR ?? '-'}</td>
+                          )}
+                          {leagueInfo?.sport === 'basketball' && (
+                            <>
+                              <td className="px-4 py-3 text-center">{team.points_for ?? '-'}</td>
+                              <td className="px-4 py-3 text-center">{team.points_against ?? '-'}</td>
+                              <td className="px-4 py-3 text-center">{team.point_difference ?? '-'}</td>
+                            </>
+                          )}
+                           {leagueInfo?.sport === 'hockey' && (
+                            <>
+                            <td className="px-4 py-3 text-center text-gray-600">{team.draw}</td>
+                              <td className="px-4 py-3 text-center">{team.goals_for ?? '-'}</td>
+                              <td className="px-4 py-3 text-center">{team.goals_against ?? '-'}</td>
+                              <td className="px-4 py-3 text-center">{team.goal_difference ?? '-'}</td>
+                            </>
+                          )}
+                          {/* Add other sport-specific data cells here */}
+                          <td className="px-4 py-3 text-center">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleTeamClick(team.id)}
+                              className="text-xs"
+                            >
+                              View Squad
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-3">
-          <Tabs defaultValue="live" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="live" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Live Matches
-              </TabsTrigger>
-              <TabsTrigger value="upcoming" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Upcoming Matches
-              </TabsTrigger>
-              <TabsTrigger value="my-leagues" className="flex items-center gap-2">
-                <Trophy className="h-4 w-4" />
-                My Leagues
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="live" className="mt-6">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <h2 className="text-lg font-semibold text-red-600">Live Now</h2>
+        
+        {/* Team Stats */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>League Stats</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg text-center">
+                <div className="text-2xl font-bold text-blue-600">{teams.length}</div>
+                <div className="text-sm text-gray-600">Teams</div>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-lg text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {teams.reduce((sum, team) => sum + (team.matches_played || 0), 0)}
                 </div>
-                <p className="text-gray-600">Matches currently in progress</p>
+                <div className="text-sm text-gray-600">Matches</div>
               </div>
-
-              <div className="space-y-4">
-                {liveMatches.map((match, index) => (
-                  <Card key={index} className="border-l-4 border-l-red-500">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <Badge variant="destructive" className="animate-pulse">
-                            LIVE
-                          </Badge>
-                          <span className="font-medium text-sm">{match.league}</span>
-                        </div>
-                        <div className="text-sm font-medium text-gray-600">
-                          {match.quarter}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="text-2xl">{match.homeLogo}</div>
-                          <div className="text-center">
-                            <div className="font-semibold text-gray-900">{match.homeTeam}</div>
-                          </div>
-                        </div>
-
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-gray-900">
-                            {match.homeScore} - {match.awayScore}
-                          </div>
-                          <div className="text-lg font-semibold text-red-600">VS</div>
-                        </div>
-
-                        <div className="flex items-center space-x-4">
-                          <div className="text-center">
-                            <div className="font-semibold text-gray-900">{match.awayTeam}</div>
-                          </div>
-                          <div className="text-2xl">{match.awayLogo}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="p-4 bg-gray-50 rounded-lg text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {teams.reduce((sum, team) => sum + (team.wins || 0), 0)}
+                </div>
+                <div className="text-sm text-gray-600">Total Wins</div>
               </div>
-            </TabsContent>
-
-            <TabsContent value="upcoming" className="mt-6">
-              <div className="text-center py-12 text-gray-500">
-                <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming matches</h3>
-                <p>Check back later for scheduled games</p>
+              <div className="p-4 bg-gray-50 rounded-lg text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {teams.reduce((sum, team) => sum + (team.draw || 0), 0)}
+                </div>
+                <div className="text-sm text-gray-600">Total Draws</div>
               </div>
-            </TabsContent>
-
-            <TabsContent value="my-leagues" className="mt-6">
-              <div className="text-center py-12 text-gray-500">
-                <Trophy className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No subscribed leagues</h3>
-                <p>Subscribe to leagues to see them here</p>
-              </div>
-            </TabsContent>
-          </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Team Squad */}
+      {selectedTeam && !loading && !error && leagueInfo?.sport && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                Team Squad
+                <span className="text-sm font-normal text-gray-500">
+                  {teams.find(t => t.id === selectedTeam)?.name}
+                </span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setSelectedTeam(null)}>
+                Back to League
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-600">
+                    <th className="px-4 py-3 text-left font-medium">Player</th>
+                    <th className="px-4 py-3 text-left font-medium">Position</th>
+                    <th className="px-4 py-3 text-center font-medium">Matches</th>
+                    <th className="px-4 py-3 text-center font-medium">
+                      {SPORT_STATS[leagueInfo.sport as keyof typeof SPORT_STATS]?.mainStat.label || 'Goals'}
+                    </th>
+                    <th className="px-4 py-3 text-center font-medium">
+                      {SPORT_STATS[leagueInfo.sport as keyof typeof SPORT_STATS]?.secondaryStat.label || 'Assists'}
+                    </th>
+                    <th className="px-4 py-3 text-center font-medium">MVPs</th>
+                    <th className="px-4 py-3 text-center font-medium">Stats</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {players.map(player => {
+                    const sportStats = SPORT_STATS[leagueInfo.sport as keyof typeof SPORT_STATS];
+                    return (
+                      <tr key={player.id} className="border-t hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-medium text-gray-600">
+                              {(player.name || player.id).charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{player.name || player.id}</div>
+                              <div className="text-xs text-gray-500">#{player.jersey_number || 'N/A'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">{player.position || "-"}</td>
+                        <td className="px-4 py-3 text-center">{player.matches_played ?? "-"}</td>
+                        <td className={`px-4 py-3 text-center font-medium ${sportStats?.mainStat.color}`}>
+                          {player[sportStats?.mainStat.key] ?? "-"}
+                        </td>
+                        <td className={`px-4 py-3 text-center font-medium ${sportStats?.secondaryStat.color}`}>
+                          {player[sportStats?.secondaryStat.key] ?? "-"}
+                        </td>
+                        <td className="px-4 py-3 text-center font-medium text-purple-600">{player.MVPs ?? "-"}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            {sportStats?.additionalStats.map(stat => 
+                              player[stat.key] ? (
+                                <span key={stat.key} className={`px-2 py-1 ${stat.bgColor} ${stat.color} rounded`}>
+                                  {player[stat.key]} {stat.label}
+                                </span>
+                              ) : null
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
